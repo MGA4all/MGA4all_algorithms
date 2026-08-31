@@ -1,6 +1,7 @@
 import pypsa
 from .model_interface_pypsa import (
     match_config_techs_to_model_techs,
+    extract_capacity_bounds,
     extract_diversified_capacity,
     extract_minimum_feasible_cost,
     create_mga_model,
@@ -9,6 +10,7 @@ from .model_interface_pypsa import (
 )
 from .validate import HopSkipJumpConfig
 
+from .diversity_metrics import mean_of_shannon_of_projections
 
 def setup_mga_model(config: HopSkipJumpConfig, network_costopt):
     network = network_costopt
@@ -62,6 +64,7 @@ def hop_skip_jump_algorithm(
     target_techs, deployed_capacity_series, spatially_explicit = (
         create_target_variables(config, network_mga)
     )
+    ub_capacity_series, lb_capacity_series = extract_capacity_bounds(target_techs, network_mga, spatially_explicit)
 
     mga_weights[0] = deployed_capacity_series.replace(
         deployed_capacity_series.values, 0
@@ -98,4 +101,9 @@ def hop_skip_jump_algorithm(
         )
         mga_weights[iteration] = mga_weights_series.copy()
 
-    return mga_alternatives, mga_spatial_alternatives, mga_weights
+    if spatially_explicit:
+        shannon = mean_of_shannon_of_projections(mga_spatial_alternatives, lb=lb_capacity_series, ub=ub_capacity_series)
+    else:
+        shannon = mean_of_shannon_of_projections(mga_alternatives, lb=lb_capacity_series, ub=ub_capacity_series)
+
+    return mga_alternatives, mga_spatial_alternatives, mga_weights, shannon
