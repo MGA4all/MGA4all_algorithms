@@ -48,12 +48,9 @@ def normalise_l2(weights_series):
 def compute_diversification_weights(
     deployed_capacity_series,
     previous_weights_series,
-    noise_threshold=0.001,
-    weighting_method="integer",
 ):
     new_weights_series = deployed_capacity_series
-    if weighting_method == "integer":
-        new_weights_series[:] = (deployed_capacity_series > noise_threshold).astype(int)
+    new_weights_series[:] = normalise_l2(deployed_capacity_series).round(2)
     updated_weights_series = previous_weights_series + new_weights_series
     # Perturb if all values are the same
     diversification_weights_series = normalise_l2(updated_weights_series)
@@ -112,9 +109,7 @@ def update_mga_objective(
     return (network_mga, model_mga)
 
 
-def spores_algorithm(
-    config: SPORESConfig, network_costopt: pypsa.Network, noise_threshold=0.001
-):
+def spores_algorithm(config: SPORESConfig, network_costopt: pypsa.Network):
     mga_alternatives = {}
     mga_spatial_alternatives = {}
     mga_weights = {}
@@ -178,7 +173,6 @@ def spores_algorithm(
             diversification_weights_series = compute_diversification_weights(
                 diversified_technologies_series,
                 previous_weights_series,
-                noise_threshold,
             )
             mga_weights_series = diversification_weights_series
 
@@ -196,7 +190,6 @@ def spores_algorithm(
             diversification_weights_series = compute_diversification_weights(
                 diversified_technologies_series,
                 previous_weights_series,
-                noise_threshold,
             )
             mga_weights_series = compute_combined_weights(
                 intensification_weights_series,
@@ -315,7 +308,8 @@ def is_different_enough(
 
 
 def spores_algorithm_adaptive(
-    config: SPORESConfig, network_costopt: pypsa.Network, noise_threshold=0.001
+    config: SPORESConfig,
+    network_costopt: pypsa.Network,
 ):
     MAX_NOISE_ATTEMPTS = 50
 
@@ -377,7 +371,6 @@ def spores_algorithm_adaptive(
             diversification_weights_series = compute_diversification_weights(
                 diversified_technologies_series,
                 previous_weights_series,
-                noise_threshold,
             )
             mga_weights_series = diversification_weights_series
         else:
@@ -392,7 +385,6 @@ def spores_algorithm_adaptive(
             diversification_weights_series = compute_diversification_weights(
                 diversified_technologies_series,
                 previous_weights_series,
-                noise_threshold,
             )
             mga_weights_series = compute_combined_weights(
                 intensification_weights_series,

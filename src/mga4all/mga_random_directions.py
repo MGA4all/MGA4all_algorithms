@@ -31,12 +31,16 @@ def create_target_variables(config: RandomDirectionsConfig, network_mga):
     return target_techs, deployed_capacity_series, spatial
 
 
-def compute_random_weights(deployed_capacity_series):
-    mga_weights_series = deployed_capacity_series
-    mga_weights_series[:] = np.round(
-        np.random.uniform(-1, 1, len(mga_weights_series)), 2
+def generate_random_weights(
+    index: pd.Index, config: RandomDirectionsConfig
+) -> pd.DataFrame:
+    """Generate random weights using index of deployed_capacity."""
+    random_values = np.random.uniform(-1, 1, size=(len(index), config.alternatives))
+    return pd.DataFrame(
+        np.round(random_values, 2),
+        index=index,
+        columns=range(1, config.alternatives + 1),
     )
-    return mga_weights_series
 
 
 def update_mga_objective(
@@ -58,8 +62,21 @@ def random_directions_algorithm(
     target_techs, deployed_capacity_series, spatially_explicit = (
         create_target_variables(config, network_mga)
     )
-    for iteration in range(1, config.alternatives + 1):
-        mga_weights_series = compute_random_weights(deployed_capacity_series)
+
+    mga_spatial_alternatives[0] = extract_diversified_capacity(
+        target_techs, network_costopt, spatial=True
+    )
+    mga_alternatives[0] = extract_diversified_capacity(
+        target_techs, network_costopt, spatial=False
+    )
+
+    # Pre-compute all randomised weights; helps with parallelisation
+    mga_weights = generate_random_weights(
+        index=deployed_capacity_series.index, config=config
+    )
+
+    for iteration, weights in mga_weights.items():
+        mga_weights_series = weights
         network_mga, model_mga = update_mga_objective(
             network_mga, model_mga, mga_weights_series, target_techs, spatially_explicit
         )
@@ -75,4 +92,4 @@ def random_directions_algorithm(
             target_techs, network_mga, spatial=True
         )
 
-    return mga_alternatives, mga_spatial_alternatives
+    return mga_alternatives, mga_spatial_alternatives, mga_weights
