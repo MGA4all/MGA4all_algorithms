@@ -6,6 +6,7 @@ from scipy.stats import spearmanr
 
 from .model_interface_pypsa import (
     match_config_techs_to_model_techs,
+    extract_capacity_bounds,
     extract_diversified_capacity,
     extract_intensified_capacity,
     extract_minimum_feasible_cost,
@@ -22,6 +23,8 @@ from .direction_similarity_checks import (
     perturb_noise,
     is_different_enough,
 )
+
+from .diversity_metrics import mean_of_shannon_of_projections
 
 
 def setup_mga_model(config: SPORESConfig, network):
@@ -131,6 +134,7 @@ def spores_algorithm(
     target_techs, diversified_technologies_series, spatially_explicit = (
         create_target_variables(config, network_mga)
     )
+    ub_capacity_series, lb_capacity_series = extract_capacity_bounds(target_techs, network_mga, spatially_explicit)
     intensified_technologies_series = create_intensification_variables(
         network_mga, spatially_explicit, target_techs, config
     )
@@ -250,4 +254,9 @@ def spores_algorithm(
         mga_weights[iteration] = mga_weights_series.copy()
         mga_diversification_weights = diversification_weights_series
 
-    return mga_alternatives, mga_spatial_alternatives, mga_weights
+    if spatially_explicit:
+        shannon = mean_of_shannon_of_projections(mga_spatial_alternatives, lb=lb_capacity_series, ub=ub_capacity_series)
+    else:
+        shannon = mean_of_shannon_of_projections(mga_alternatives, lb=lb_capacity_series, ub=ub_capacity_series)
+
+    return mga_alternatives, mga_spatial_alternatives, mga_weights, shannon
