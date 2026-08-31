@@ -35,17 +35,10 @@ def generate_random_weights(
     index: pd.Index, config: RandomDirectionsConfig
 ) -> pd.DataFrame:
     """Generate random weights using index of deployed_capacity."""
-    random_values = np.random.uniform(-1, 1, size=(config.alternatives, len(index))).T
+    random_values = np.random.uniform(-1, 1, size=(len(index), config.alternatives))
     return pd.DataFrame(
-        random_values, index=index, columns=range(1, config.alternatives + 1)
+        np.round(random_values,2), index=index, columns=range(1, config.alternatives + 1)
     )
-
-
-def compute_random_weights(config, deployed_capacity_series):
-    mga_weights = generate_random_weights(
-        index=deployed_capacity_series.index, config=config
-    ).round(2)
-    return mga_weights
 
 
 def update_mga_objective(
@@ -76,7 +69,7 @@ def random_directions_algorithm(
     )
 
     # Pre-compute all randomised weights; helps with parallelisation
-    mga_weights = compute_random_weights(config, deployed_capacity_series)
+    mga_weights = generate_random_weights(index=deployed_capacity_series.index, config=config)
 
     for iteration, weights in mga_weights.items():
         mga_weights_series = weights
@@ -95,4 +88,4 @@ def random_directions_algorithm(
             target_techs, network_mga, spatial=True
         )
 
-    return mga_alternatives, mga_spatial_alternatives, mga_weights.to_dict()
+    return mga_alternatives, mga_spatial_alternatives, mga_weights
