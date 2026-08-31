@@ -109,9 +109,7 @@ def update_mga_objective(
     return (network_mga, model_mga)
 
 
-def spores_algorithm(
-    config: SPORESConfig, network_costopt: pypsa.Network
-):
+def spores_algorithm(config: SPORESConfig, network_costopt: pypsa.Network):
     mga_alternatives = {}
     mga_spatial_alternatives = {}
     mga_weights = {}
@@ -310,7 +308,8 @@ def is_different_enough(
 
 
 def spores_algorithm_adaptive(
-    config: SPORESConfig, network_costopt: pypsa.Network,
+    config: SPORESConfig,
+    network_costopt: pypsa.Network,
 ):
     MAX_NOISE_ATTEMPTS = 50
 
