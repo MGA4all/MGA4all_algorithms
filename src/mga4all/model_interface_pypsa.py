@@ -81,6 +81,66 @@ def match_config_techs_to_model_techs(config, network):
 
     return model_techs
 
+def extract_capacity_bounds(target_techs, network, spatial=False):
+    """
+    Extracts the upper and lower bounds of the targeted capacity decision variables
+    """
+    component_tables = {}
+    component_tables["lb"] = {
+        "Generator": (network.generators, "p_nom_min", "carrier", "bus"),
+        "Link": (network.links, "p_nom_min", "carrier", "bus0"),
+        "Process": (network.processes, "p_nom_min", "carrier", "bus0"),
+        "StorageUnit": (network.storage_units, "p_nom_min", "carrier", "bus"),
+        "Store": (network.stores, "e_nom_min", "carrier", "bus"),
+        "Line": (network.lines, "s_nom_min", "carrier", "bus0"),
+    }
+    component_tables["ub"] = {
+        "Generator": (network.generators, "p_nom_max", "carrier", "bus"),
+        "Link": (network.links, "p_nom_max", "carrier", "bus0"),
+        "Process": (network.processes, "p_nom_max", "carrier", "bus0"),
+        "StorageUnit": (network.storage_units, "p_nom_max", "carrier", "bus"),
+        "Store": (network.stores, "e_nom_max", "carrier", "bus"),
+        "Line": (network.lines, "s_nom_max", "carrier", "bus0"),
+    }
+
+    if "intensified" in target_techs.keys():
+        target_techs_merged = {}
+        for group in target_techs.values():
+            for component, technologies in group.items():
+                target_techs_merged.setdefault(component, set()).update(technologies)
+
+        target_techs_merged = {component: list(technologies) for component, technologies in target_techs_merged.items()}
+    else:
+        target_techs_merged = target_techs
+
+    bounds_capacity_assets = {"lb": {}, "ub": {}}
+    bounds_capacity_buses = {"lb": {}, "ub": {}}
+
+    for bound in ["lb", "ub"]:
+        for component, carriers in target_techs_merged.items():
+            df, opt_col, carrier_col, bus_col = component_tables[bound][component]
+
+            filtered = df[df[carrier_col].isin(carriers)]
+
+            bounds_capacity_assets[bound][component] = filtered[opt_col].to_dict()
+
+            bounds_capacity_buses[bound][component] = (
+                filtered.groupby(carrier_col)[opt_col].sum().to_dict()
+            )
+
+    if spatial:
+        bounds_capacity = bounds_capacity_assets
+    else:
+        bounds_capacity = bounds_capacity_buses
+
+    ub_capacity_series = pd.Series(
+        {k: v for inner in bounds_capacity["ub"].values() for k, v in inner.items()}
+    )
+    lb_capacity_series = pd.Series(
+        {k: v for inner in bounds_capacity["lb"].values() for k, v in inner.items()}
+    )
+
+    return ub_capacity_series, lb_capacity_series
 
 def extract_diversified_capacity(target_techs, network, spatial=False):
     component_tables = {
