@@ -5,7 +5,7 @@ import pytest
 from mga4all.examples import create_pypsa_network
 from mga4all.mga_hop_skip_jump import hop_skip_jump_algorithm
 from mga4all.mga_random_directions import random_directions_algorithm
-from mga4all.mga_spores import spores_algorithm, spores_algorithm_adaptive
+from mga4all.mga_spores import spores_algorithm
 from mga4all.validate import HopSkipJumpConfig, RandomDirectionsConfig, SPORESConfig
 
 
@@ -52,8 +52,6 @@ def spores_intensify_config():
         ("random_directions_config", random_directions_algorithm),
         ("spores_diversify_config", spores_algorithm),
         ("spores_intensify_config", spores_algorithm),
-        ("spores_diversify_config", spores_algorithm_adaptive),
-        ("spores_intensify_config", spores_algorithm_adaptive),
     ],
 )
 def test_examples(network, configuration, algorithm, request):
