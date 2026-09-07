@@ -24,9 +24,6 @@ from .direction_similarity_checks import (
     is_different_enough,
 )
 
-from .diversity_metrics import mean_of_shannon_of_projections, volume_estimation_by_shadow_addition
-
-
 def setup_mga_model(config: SPORESConfig, network):
     minimum_cost = extract_minimum_feasible_cost(network)
     slack = config.cost_slack
@@ -258,11 +255,4 @@ def spores_algorithm(
         mga_weights[iteration] = mga_weights_series.copy()
         mga_diversification_weights = diversification_weights_series
 
-    if spatially_explicit:
-        shannon = mean_of_shannon_of_projections(mga_spatial_alternatives, lb=lb_capacity_series, ub=ub_capacity_series)
-        vesa = volume_estimation_by_shadow_addition(mga_spatial_alternatives)
-    else:
-        shannon = mean_of_shannon_of_projections(mga_alternatives, lb=lb_capacity_series, ub=ub_capacity_series)
-        vesa = volume_estimation_by_shadow_addition(mga_alternatives)
-
-    return mga_alternatives, mga_spatial_alternatives, mga_weights, shannon, vesa
+    return mga_alternatives, mga_spatial_alternatives, mga_weights, lb_capacity_series, ub_capacity_series

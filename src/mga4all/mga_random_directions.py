@@ -13,9 +13,6 @@ from .model_interface_pypsa import (
 )
 from .validate import RandomDirectionsConfig
 
-from .diversity_metrics import mean_of_shannon_of_projections, volume_estimation_by_shadow_addition
-
-
 def setup_mga_model(config: RandomDirectionsConfig, network_costopt):
     network = network_costopt
     minimum_cost = extract_minimum_feasible_cost(network)
@@ -96,11 +93,4 @@ def random_directions_algorithm(
             target_techs, network_mga, spatial=True
         )
 
-    if spatially_explicit:
-        shannon = mean_of_shannon_of_projections(mga_spatial_alternatives, lb=lb_capacity_series, ub=ub_capacity_series)
-        vesa = volume_estimation_by_shadow_addition(mga_spatial_alternatives)
-    else:
-        shannon = mean_of_shannon_of_projections(mga_alternatives, lb=lb_capacity_series, ub=ub_capacity_series)
-        vesa = volume_estimation_by_shadow_addition(mga_alternatives)
-
-    return mga_alternatives, mga_spatial_alternatives, mga_weights, shannon, vesa
+    return mga_alternatives, mga_spatial_alternatives, mga_weights, lb_capacity_series, ub_capacity_series
