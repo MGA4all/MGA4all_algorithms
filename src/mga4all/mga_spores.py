@@ -2,7 +2,7 @@ import pandas as pd
 import pypsa
 import numpy as np
 from pandas.api.types import is_number
-from scipy.stats import spearmanr
+
 
 from .model_interface_pypsa import (
     match_config_techs_to_model_techs,
@@ -177,7 +177,11 @@ def spores_algorithm(
         # If intensification is not required, simple diversification applies
         elif iteration == 1 and (
             config.intensification_coefficient == 0
-            or intensification_weights_series == 0
+            or (
+                intensification_weights_series == 0
+                if isinstance(intensification_weights_series, int)
+                else (intensification_weights_series == 0).all()
+            )
         ):
             previous_weights_series = mga_diversification_weights
             if spatially_explicit:
