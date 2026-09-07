@@ -1,4 +1,5 @@
 import pypsa
+import pandas as pd
 from .model_interface_pypsa import (
     match_config_techs_to_model_techs,
     extract_capacity_bounds,
@@ -10,7 +11,7 @@ from .model_interface_pypsa import (
 )
 from .validate import HopSkipJumpConfig
 
-from .diversity_metrics import mean_of_shannon_of_projections
+from .diversity_metrics import mean_of_shannon_of_projections, volume_estimation_by_shadow_addition
 
 def setup_mga_model(config: HopSkipJumpConfig, network_costopt):
     network = network_costopt
@@ -66,9 +67,7 @@ def hop_skip_jump_algorithm(
     )
     ub_capacity_series, lb_capacity_series = extract_capacity_bounds(target_techs, network_mga, spatially_explicit)
 
-    mga_weights[0] = deployed_capacity_series.replace(
-        deployed_capacity_series.values, 0
-    )  # empty series
+    mga_weights[0] = pd.Series(0, index=deployed_capacity_series.index)
     mga_spatial_alternatives[0] = extract_diversified_capacity(
         target_techs, network_costopt, spatial=True
     )
@@ -103,7 +102,9 @@ def hop_skip_jump_algorithm(
 
     if spatially_explicit:
         shannon = mean_of_shannon_of_projections(mga_spatial_alternatives, lb=lb_capacity_series, ub=ub_capacity_series)
+        vesa = volume_estimation_by_shadow_addition(mga_spatial_alternatives)
     else:
         shannon = mean_of_shannon_of_projections(mga_alternatives, lb=lb_capacity_series, ub=ub_capacity_series)
+        vesa = volume_estimation_by_shadow_addition(mga_alternatives)
 
-    return mga_alternatives, mga_spatial_alternatives, mga_weights, shannon
+    return mga_alternatives, mga_spatial_alternatives, mga_weights, shannon, vesa

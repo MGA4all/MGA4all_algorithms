@@ -127,9 +127,8 @@ def volume_estimation_by_shadow_addition(points):
 
     Parameters
     ----------
-    points : pd.DataFrame
-        Rows are decision variables/dimensions and columns
-        are MGA alternatives.
+    points : dict
+        Values are decision variables and keys are MGA alternatives.
 
     Returns
     -------
@@ -137,6 +136,10 @@ def volume_estimation_by_shadow_addition(points):
         Sum of the convex-hull areas of all 2D projections.
     """
     vesa = 0.0
+
+    points = pd.concat((
+        pd.DataFrame(points[x]).fillna(0).round(2).sum(axis=1) for x in points
+    ), axis=1)
 
     variables = points.index
 
@@ -154,7 +157,6 @@ def volume_estimation_by_shadow_addition(points):
 
     return vesa
 
-
 def _convex_hull_area(points):
     """
     Calculates the area of the convex hull of a set of 2D points.
@@ -169,51 +171,74 @@ def _convex_hull_area(points):
     Returns:
         float: The area of the convex hull. Returns 0.0 if there are fewer than 3 unique points.
     """
+    hull_points = _convex_hull(points)
+
+    if len(hull_points) < 3:
+        return 0.0
+
+    return _shoelace_area(hull_points, len(hull_points))
+
+def _convex_hull(points):
     n = points.shape[0]
 
     indices = np.argsort(points[:, 0])
     points = points[indices]
 
-    # Handle ties in x-coordinate by sorting the y-coordinate for those specific blocks
     i = 0
     while i < n:
         j = i
-        # Find the end of the current block of points with the same x-coordinate
+
         while j < n and points[j, 0] == points[i, 0]:
             j += 1
-        # If there's more than one point in this block, sort them by y-coordinate
+
         if j - i > 1:
             slice_to_sort = points[i:j]
-            # Sort the slice by y-coordinate
             indices = np.argsort(slice_to_sort[:, 1])
             points[i:j] = slice_to_sort[indices]
+
         i = j
 
     hull_points = np.empty((2 * n, 2), dtype=points.dtype)
     hull_idx = 0
 
     for p in points:
-        while hull_idx >= 2 and _cross_product(hull_points[hull_idx - 2], hull_points[hull_idx - 1], p) <= 0:
-            hull_idx -= 1  # remove point
-        hull_points[hull_idx] = p  # Add point
-        hull_idx += 1  # Increment index
+        while (
+            hull_idx >= 2
+            and _cross_product(
+                hull_points[hull_idx - 2],
+                hull_points[hull_idx - 1],
+                p,
+            )
+            <= 0
+        ):
+            hull_idx -= 1
+
+        hull_points[hull_idx] = p
+        hull_idx += 1
 
     t = hull_idx + 1
 
-    for p in points[n - 2:: -1]:
-        while hull_idx >= t and _cross_product(hull_points[hull_idx - 2], hull_points[hull_idx - 1], p) <= 0:
-            hull_idx -= 1  # remove point
-        hull_points[hull_idx] = p  # Add point
-        hull_idx += 1  # Increment index
+    for p in points[n - 2 :: -1]:
+        while (
+            hull_idx >= t
+            and _cross_product(
+                hull_points[hull_idx - 2],
+                hull_points[hull_idx - 1],
+                p,
+            )
+            <= 0
+        ):
+            hull_idx -= 1
 
-    # Extract the actual hull points from the buffer
+        hull_points[hull_idx] = p
+        hull_idx += 1
+
     hull_points = hull_points[:hull_idx]
 
-    # If the hull has fewer than 3 points (e.g., all points are collinear), area is 0.
     if hull_idx < 3:
-        return 0.0
+        return hull_points
 
-    return _shoelace_area(hull_points, hull_idx)
+    return hull_points
 
 
 def _cross_product(p1, p2, p3):
