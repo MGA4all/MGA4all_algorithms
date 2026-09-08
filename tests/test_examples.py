@@ -46,15 +46,20 @@ def spores_intensify_config():
 
 
 @pytest.mark.parametrize(
-    ["configuration", "algorithm"],
+    ["configuration", "algorithm", "adaptive"],
     [
-        ("hop_skip_jump_config", hop_skip_jump_algorithm),
-        ("random_directions_config", random_directions_algorithm),
-        ("spores_diversify_config", spores_algorithm),
-        ("spores_intensify_config", spores_algorithm),
+        pytest.param("hop_skip_jump_config", hop_skip_jump_algorithm, None, id="hop-skip-jump"),
+        pytest.param("random_directions_config", random_directions_algorithm, None, id="random-directions"),
+        pytest.param("spores_diversify_config", spores_algorithm, False, id="spores-diversify"),
+        pytest.param("spores_diversify_config", spores_algorithm, True, id="spores-diversify-adaptive"),
+        pytest.param("spores_intensify_config", spores_algorithm, False, id="spores-intensify"),
+        pytest.param("spores_intensify_config", spores_algorithm, True, id="spores-intensify-adaptive"),
     ],
 )
-def test_examples(network, configuration, algorithm, request):
-    """Test that each algorithm runs without error with the sample configuration."""
-    config = request.getfixturevalue(configuration)  # fetch config from fixture name
-    algorithm(config, network)
+def test_examples(network, configuration, algorithm, adaptive, request):
+    config = request.getfixturevalue(configuration)
+
+    if adaptive is None:
+        algorithm(config, network)
+    else:
+        algorithm(config, network, adaptive=adaptive)
