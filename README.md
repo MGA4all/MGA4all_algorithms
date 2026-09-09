@@ -1,3 +1,5 @@
+<img src="./docs/mga4all_logo_algos.png" alt="MGA4all_logo"  width="100">
+
 # MGA4all - algorithms
 Various Modelling to Generate Alternative (MGA) algorithms for different energy system optimisation modelling frameworks
 
