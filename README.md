@@ -1,7 +1,7 @@
 <img src="./docs/mga4all_logo_algos.png" alt="MGA4all_logo"  width="100">
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-1-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-2-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 # MGA4all - algorithms
@@ -73,6 +73,7 @@ In `docs\tutorials`, you will find several jupyter notebooks that showcase how t
   <tbody>
     <tr>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/ChristianDDinga"><img src="https://avatars.githubusercontent.com/u/127748593?v=4?s=100" width="100px;" alt="Christian Doh Dinga"/><br /><sub><b>Christian Doh Dinga</b></sub></a><br /><a href="#code-ChristianDDinga" title="Code">💻</a> <a href="#data-ChristianDDinga" title="Data">🔣</a> <a href="#ideas-ChristianDDinga" title="Ideas, Planning, & Feedback">🤔</a> <a href="#research-ChristianDDinga" title="Research">🔬</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="http://www.svrijn.nl"><img src="https://avatars.githubusercontent.com/u/8833517?v=4?s=100" width="100px;" alt="Sander van Rijn"/><br /><sub><b>Sander van Rijn</b></sub></a><br /><a href="#code-sjvrijn" title="Code">💻</a> <a href="#test-sjvrijn" title="Tests">⚠️</a> <a href="#review-sjvrijn" title="Reviewed Pull Requests">👀</a> <a href="#doc-sjvrijn" title="Documentation">📖</a></td>
     </tr>
   </tbody>
 </table>
