@@ -43,17 +43,13 @@ def mean_of_shannon_of_projections(points, lb, ub):
     
     Parameters
     ----------
-    points : dict
-        Values are decision variables and keys are MGA alternatives.
+    points : pd.DataFrame
+        Rows are decision variables and columns are MGA alternatives.
     lb : pd.Series
         Lower bound for each decision variable.
     ub : pd.Series
         Upper bound for each decision variable.
     """
-
-    points = pd.concat((
-        pd.DataFrame(points[x]).fillna(0).round(2).sum(axis=1) for x in points
-    ), axis=1)
     
     if not points.index.equals(lb.index) or not points.index.equals(ub.index):
         raise ValueError(
@@ -127,8 +123,8 @@ def volume_estimation_by_shadow_addition(points):
 
     Parameters
     ----------
-    points : dict
-        Values are decision variables and keys are MGA alternatives.
+    points : pd.DataFrame
+        Rows are decision variables and columns are MGA alternatives.
 
     Returns
     -------
@@ -136,10 +132,6 @@ def volume_estimation_by_shadow_addition(points):
         Sum of the convex-hull areas of all 2D projections.
     """
     vesa = 0.0
-
-    points = pd.concat((
-        pd.DataFrame(points[x]).fillna(0).round(2).sum(axis=1) for x in points
-    ), axis=1)
 
     variables = points.index
 
