@@ -1,7 +1,7 @@
 <img src="./docs/mga4all_logo_algos.png" alt="MGA4all_logo"  width="100">
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/github/all-contributors/MGA4all/MGA4all_algorithms?color=ee8449&style=flat-square)](#contributors)
+[![All Contributors](https://img.shields.io/badge/all_contributors-1-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 # MGA4all - algorithms
@@ -69,6 +69,13 @@ In `docs\tutorials`, you will find several jupyter notebooks that showcase how t
 <!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
 <!-- prettier-ignore-start -->
 <!-- markdownlint-disable -->
+<table>
+  <tbody>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/ChristianDDinga"><img src="https://avatars.githubusercontent.com/u/127748593?v=4?s=100" width="100px;" alt="Christian Doh Dinga"/><br /><sub><b>Christian Doh Dinga</b></sub></a><br /><a href="#code-ChristianDDinga" title="Code">💻</a> <a href="#data-ChristianDDinga" title="Data">🔣</a> <a href="#ideas-ChristianDDinga" title="Ideas, Planning, & Feedback">🤔</a> <a href="#research-ChristianDDinga" title="Research">🔬</a></td>
+    </tr>
+  </tbody>
+</table>
 
 <!-- markdownlint-restore -->
 <!-- prettier-ignore-end -->
