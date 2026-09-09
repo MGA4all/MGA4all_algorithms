@@ -84,6 +84,6 @@ In `docs\tutorials`, you will find several jupyter notebooks that showcase how t
 
 ### Licence
 
-Copyright MGA4all (Contributors)[https://github.com/MGA4all/MGA4all_algorithms/graphs/contributors]
+Copyright MGA4all [Contributors](https://github.com/MGA4all/MGA4all_algorithms/graphs/contributors)
 
 MGA4all is licensed under the open source [MIT License](/LICENSE). 
