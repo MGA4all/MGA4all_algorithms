@@ -14,6 +14,7 @@ from .model_interface_pypsa import (
     assign_mga_objective,
 )
 from .validate import SPORESConfig
+from .utils import alternatives_dict_to_frame
 
 from .direction_similarity_checks import (
     ranking_similarity,
@@ -35,16 +36,27 @@ def setup_mga_model(config: SPORESConfig, network):
 def create_target_variables(config: SPORESConfig, network_mga):
     spatial = config.spatially_explicit
     target_techs = match_config_techs_to_model_techs(config, network_mga)
-    diversified_technologies_series = extract_diversified_capacity(
-        target_techs, network_mga, spatial
+    deployed_capacity_series_spatial, deployed_capacity_series_aggregate = (
+        extract_diversified_capacity(target_techs, network_mga)
     )
+    if spatial == True:
+        diversified_technologies_series = deployed_capacity_series_spatial
+    else:
+        diversified_technologies_series = deployed_capacity_series_aggregate
+
     return target_techs, diversified_technologies_series, spatial
 
 
 def create_intensification_variables(network_mga, spatial, target_techs, config):
-    intensified_technologies_series = extract_intensified_capacity(
-        target_techs, config, network_mga, spatial
-    )
+    (
+        intensified_technologies_series_spatial,
+        intensified_technologies_series_aggregate,
+    ) = extract_intensified_capacity(target_techs, config, network_mga)
+    if spatial == True:
+        intensified_technologies_series = intensified_technologies_series_spatial
+    else:
+        intensified_technologies_series = intensified_technologies_series_aggregate
+
     return intensified_technologies_series
 
 
@@ -140,11 +152,8 @@ def spores_algorithm(
     mga_diversification_weights = pd.Series(
         0, index=diversified_technologies_series.index
     )
-    mga_spatial_alternatives[0] = extract_diversified_capacity(
-        target_techs, network_costopt, spatial=True
-    )
-    mga_alternatives[0] = extract_diversified_capacity(
-        target_techs, network_costopt, spatial=False
+    mga_spatial_alternatives[0], mga_alternatives[0] = extract_diversified_capacity(
+        target_techs, network_costopt
     )
 
     intensification_weights_series = compute_intensification_weights(
@@ -242,16 +251,14 @@ def spores_algorithm(
         )
         network_mga.optimize.solve_model(log_to_console=False)
 
-        # Storing capacity results for further inspection
-        ## TODO: make the result saving and inspection smoother and
-        ## standardised across methods
-        mga_alternatives[iteration] = extract_diversified_capacity(
-            target_techs, network_mga, spatial=False
-        )
-        mga_spatial_alternatives[iteration] = extract_diversified_capacity(
-            target_techs, network_mga, spatial=True
+        mga_spatial_alternatives[iteration], mga_alternatives[iteration] = (
+            extract_diversified_capacity(target_techs, network_mga)
         )
         mga_weights[iteration] = mga_weights_series.copy()
         mga_diversification_weights = diversification_weights_series
 
-    return mga_alternatives, mga_spatial_alternatives, mga_weights
+    mga_spatial_alternatives = alternatives_dict_to_frame(mga_spatial_alternatives)
+    mga_alternatives = alternatives_dict_to_frame(mga_alternatives)
+    mga_weights = alternatives_dict_to_frame(mga_weights)
+
+    return mga_spatial_alternatives, mga_alternatives, mga_weights

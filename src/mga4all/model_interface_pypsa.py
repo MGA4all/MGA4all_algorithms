@@ -82,7 +82,100 @@ def match_config_techs_to_model_techs(config, network):
     return model_techs
 
 
-def extract_diversified_capacity(target_techs, network, spatial=False):
+def extract_capacity_bounds(network, config):
+    """
+    Extracts the upper and lower bounds of the targeted capacity decision variables
+    """
+    component_tables = {}
+    component_tables["lb"] = {
+        "Generator": (network.generators, "p_nom_min", "carrier", "bus"),
+        "Link": (network.links, "p_nom_min", "carrier", "bus0"),
+        "Process": (network.processes, "p_nom_min", "carrier", "bus0"),
+        "StorageUnit": (network.storage_units, "p_nom_min", "carrier", "bus"),
+        "Store": (network.stores, "e_nom_min", "carrier", "bus"),
+        "Line": (network.lines, "s_nom_min", "carrier", "bus0"),
+    }
+    component_tables["ub"] = {
+        "Generator": (network.generators, "p_nom_max", "carrier", "bus"),
+        "Link": (network.links, "p_nom_max", "carrier", "bus0"),
+        "Process": (network.processes, "p_nom_max", "carrier", "bus0"),
+        "StorageUnit": (network.storage_units, "p_nom_max", "carrier", "bus"),
+        "Store": (network.stores, "e_nom_max", "carrier", "bus"),
+        "Line": (network.lines, "s_nom_max", "carrier", "bus0"),
+    }
+
+    target_techs = match_config_techs_to_model_techs(config, network)
+
+    if "intensified" in target_techs.keys():
+        target_techs_merged = {}
+        for group in target_techs.values():
+            for component, technologies in group.items():
+                target_techs_merged.setdefault(component, set()).update(technologies)
+
+        target_techs_merged = {
+            component: list(technologies)
+            for component, technologies in target_techs_merged.items()
+        }
+    else:
+        target_techs_merged = target_techs
+
+    bounds_capacity_assets = {"lb": {}, "ub": {}}
+    bounds_capacity_buses = {"lb": {}, "ub": {}}
+
+    for bound in ["lb", "ub"]:
+        for component, carriers in target_techs_merged.items():
+            df, opt_col, carrier_col, bus_col = component_tables[bound][component]
+
+            filtered = df[df[carrier_col].isin(carriers)]
+
+            bounds_capacity_assets[bound][component] = filtered[opt_col].to_dict()
+
+            bounds_capacity_buses[bound][component] = (
+                filtered.groupby(carrier_col)[opt_col].sum().to_dict()
+            )
+
+    ub_capacity_series_spatial = pd.Series(
+        {
+            k: v
+            for inner in bounds_capacity_assets["ub"].values()
+            for k, v in inner.items()
+        }
+    )
+    lb_capacity_series_spatial = pd.Series(
+        {
+            k: v
+            for inner in bounds_capacity_assets["lb"].values()
+            for k, v in inner.items()
+        }
+    )
+    ub_capacity_series_aggregate = pd.Series(
+        {
+            k: v
+            for inner in bounds_capacity_buses["ub"].values()
+            for k, v in inner.items()
+        }
+    )
+    lb_capacity_series_aggregate = pd.Series(
+        {
+            k: v
+            for inner in bounds_capacity_buses["lb"].values()
+            for k, v in inner.items()
+        }
+    )
+
+    bounds_spatial = pd.concat(
+        [lb_capacity_series_spatial, ub_capacity_series_spatial], axis=1
+    )
+    bounds_spatial.columns = ["lb", "ub"]
+    bounds_aggregate = pd.concat(
+        [lb_capacity_series_aggregate, ub_capacity_series_aggregate], axis=1
+    )
+    bounds_aggregate.columns = ["lb", "ub"]
+
+    return bounds_spatial, bounds_aggregate
+
+
+def extract_diversified_capacity(target_techs, network):
     component_tables = {
         "Generator": (network.generators, "p_nom_opt", "carrier", "bus"),
         "Link": (network.links, "p_nom_opt", "carrier", "bus0"),
@@ -109,19 +202,18 @@ def extract_diversified_capacity(target_techs, network, spatial=False):
             filtered.groupby(carrier_col)[opt_col].sum().to_dict()
         )
 
-    if spatial:
-        deployed_capacity = deployed_capacity_assets
-    else:
-        deployed_capacity = deployed_capacity_buses
-
-    deployed_capacity_series = pd.Series(
-        {k: v for inner in deployed_capacity.values() for k, v in inner.items()}
+    deployed_capacity_series_spatial = pd.Series(
+        {k: v for inner in deployed_capacity_assets.values() for k, v in inner.items()}
     )
 
-    return deployed_capacity_series
+    deployed_capacity_series_aggregate = pd.Series(
+        {k: v for inner in deployed_capacity_buses.values() for k, v in inner.items()}
+    )
+
+    return deployed_capacity_series_spatial, deployed_capacity_series_aggregate
 
 
-def extract_intensified_capacity(target_techs, config, network, spatial=False):
+def extract_intensified_capacity(target_techs, config, network):
     component_tables = {
         "Generator": (network.generators, "p_nom_opt", "carrier", "bus"),
         "Link": (network.links, "p_nom_opt", "carrier", "bus0"),
@@ -161,19 +253,26 @@ def extract_intensified_capacity(target_techs, config, network, spatial=False):
                 carrier: mapping[carrier] for carrier in filtered[carrier_col].unique()
             }
 
-        if spatial:
-            deployed_capacity = deployed_capacity_assets
-        else:
-            deployed_capacity = deployed_capacity_buses
-
-        deployed_capacity_series = pd.Series(
-            {k: v for inner in deployed_capacity.values() for k, v in inner.items()}
+        deployed_capacity_series_spatial = pd.Series(
+            {
+                k: v
+                for inner in deployed_capacity_assets.values()
+                for k, v in inner.items()
+            }
+        )
+        deployed_capacity_series_aggregate = pd.Series(
+            {
+                k: v
+                for inner in deployed_capacity_buses.values()
+                for k, v in inner.items()
+            }
         )
 
     else:
-        deployed_capacity_series = 0
+        deployed_capacity_series_spatial = 0
+        deployed_capacity_series_aggregate = 0
 
-    return deployed_capacity_series
+    return deployed_capacity_series_spatial, deployed_capacity_series_aggregate
 
 
 def extract_minimum_feasible_cost(network):
