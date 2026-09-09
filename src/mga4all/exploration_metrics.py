@@ -33,14 +33,14 @@ import numpy as np
 import pandas as pd
 
 ###
-# Shannon Index ----------------------------------
+# Condensed metrics DataFrame--------------------
 ###
 
-def mean_of_shannon_of_projections(points, lb, ub):
+
+def exploration_metrics_progression(points, lb, ub):
     """
-    Mean Shannon index across each decision variable
-    of a set of MGA alternatives.
-    
+    Calculates diversity metrics as a progression over a set of MGA alternatives
+
     Parameters
     ----------
     points : pd.DataFrame
@@ -50,11 +50,48 @@ def mean_of_shannon_of_projections(points, lb, ub):
     ub : pd.Series
         Upper bound for each decision variable.
     """
-    
-    if not points.index.equals(lb.index) or not points.index.equals(ub.index):
-        raise ValueError(
-            "points, lb, and ub must have identical indices."
+
+    metrics_df = (
+        pd.DataFrame(index=points.columns, columns=["Shannon", "VESA"])
+        .astype(float)
+        .fillna(0)
+    )
+
+    for alt in metrics_df.index:
+
+        metrics_df.loc[alt, "Shannon"] = mean_of_shannon_of_projections(
+            points.iloc[:, 0 : alt + 1], lb=lb, ub=ub
         )
+
+        metrics_df.loc[alt, "VESA"] = volume_estimation_by_shadow_addition(
+            points.iloc[:, 0 : alt + 1]
+        )
+
+    return metrics_df
+
+
+###
+# Shannon Index ----------------------------------
+###
+
+
+def mean_of_shannon_of_projections(points, lb, ub):
+    """
+    Mean Shannon index across each decision variable
+    of a set of MGA alternatives.
+
+    Parameters
+    ----------
+    points : pd.DataFrame
+        Rows are decision variables and columns are MGA alternatives.
+    lb : pd.Series
+        Lower bound for each decision variable.
+    ub : pd.Series
+        Upper bound for each decision variable.
+    """
+
+    if not points.index.equals(lb.index) or not points.index.equals(ub.index):
+        raise ValueError("points, lb, and ub must have identical indices.")
 
     npoint = points.shape[1]
     ndim = points.shape[0]
@@ -79,6 +116,7 @@ def mean_of_shannon_of_projections(points, lb, ub):
     acc /= ndim
 
     return acc
+
 
 def _shannon_index(values, lb, ub, nbin, counts):
     bin_width = (ub - lb) / nbin
@@ -112,9 +150,11 @@ def _shannon_index(values, lb, ub, nbin, counts):
 
     return H
 
+
 ###
 # VESA - Volume Estimation by Shadow Addition --------------
 ###
+
 
 def volume_estimation_by_shadow_addition(points):
     """
@@ -136,7 +176,7 @@ def volume_estimation_by_shadow_addition(points):
     variables = points.index
 
     for k, variable_1 in enumerate(variables):
-        for variable_2 in variables[k + 1:]:
+        for variable_2 in variables[k + 1 :]:
             projection = np.stack(
                 (
                     points.loc[variable_1].to_numpy(),
@@ -148,6 +188,7 @@ def volume_estimation_by_shadow_addition(points):
             vesa += _convex_hull_area(projection)
 
     return vesa
+
 
 def _convex_hull_area(points):
     """
@@ -169,6 +210,7 @@ def _convex_hull_area(points):
         return 0.0
 
     return _shoelace_area(hull_points, len(hull_points))
+
 
 def _convex_hull(points):
     n = points.shape[0]
