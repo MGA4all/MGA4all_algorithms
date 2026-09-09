@@ -66,6 +66,9 @@ In `docs\tutorials`, you will find several jupyter notebooks that showcase how t
 
 ### Contributors
 
+Thanks goes to these wonderful people, sorted alphabetically ([emoji key](https://allcontributors.org/en/reference/emoji-key/)):
+
+
 <!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
 <!-- prettier-ignore-start -->
 <!-- markdownlint-disable -->
