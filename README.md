@@ -1,5 +1,9 @@
 <img src="./docs/mga4all_logo_algos.png" alt="MGA4all_logo"  width="100">
 
+<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
+[![All Contributors](https://img.shields.io/github/all-contributors/MGA4all/MGA4all_algorithms?color=ee8449&style=flat-square)](#contributors)
+<!-- ALL-CONTRIBUTORS-BADGE:END -->
+
 # MGA4all - algorithms
 Various Modelling to Generate Alternative (MGA) algorithms for different energy system optimisation modelling frameworks
 
@@ -59,6 +63,17 @@ mga_alternatives, mga_spatial_alternatives = random_directions_algorithm(test_co
 ### Tutorials
 
 In `docs\tutorials`, you will find several jupyter notebooks that showcase how to use different MGA algorithms on the above example PyPSA model, and how to inspect their outputs.
+
+### Contributors
+
+<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
+<!-- prettier-ignore-start -->
+<!-- markdownlint-disable -->
+
+<!-- markdownlint-restore -->
+<!-- prettier-ignore-end -->
+
+<!-- ALL-CONTRIBUTORS-LIST:END -->
 
 ### Licence
 
