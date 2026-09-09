@@ -43,6 +43,22 @@
         "review",
         "doc"
       ]
+    },
+    {
+      "login": "FLomb",
+      "name": "Francesco Lombardi",
+      "avatar_url": "https://avatars.githubusercontent.com/u/26432077?v=4",
+      "profile": "http://www.flombardi.org",
+      "contributions": [
+        "code",
+        "research",
+        "ideas",
+        "doc",
+        "maintenance",
+        "design",
+        "userTesting",
+        "projectManagement"
+      ]
     }
   ]
 }
