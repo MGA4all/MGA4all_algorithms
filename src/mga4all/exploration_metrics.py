@@ -8,6 +8,7 @@ Modified by Francesco Lombardi, 2026
 Changes: 
 - Updated the functions to handle inputs in the format required by MGA4all project
 - Updated some of the function descriptions
+- Created higher-level function that combines all metrics into a single dataframe
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
