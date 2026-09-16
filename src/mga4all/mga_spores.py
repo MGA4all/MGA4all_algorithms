@@ -1,27 +1,23 @@
+import numpy as np
 import pandas as pd
 import pypsa
-import numpy as np
 from pandas.api.types import is_number
 
-
+from .direction_similarity_checks import (
+    is_different_enough,
+    perturb_noise,
+    perturb_rank_flip,
+)
 from .model_interface_pypsa import (
-    match_config_techs_to_model_techs,
+    add_slack_constraint,
+    assign_mga_objective,
+    create_mga_model,
     extract_diversified_capacity,
     extract_intensified_capacity,
     extract_minimum_feasible_cost,
-    create_mga_model,
-    add_slack_constraint,
-    assign_mga_objective,
+    match_config_techs_to_model_techs,
 )
 from .validate import SPORESConfig
-
-from .direction_similarity_checks import (
-    ranking_similarity,
-    angular_similarity,
-    perturb_rank_flip,
-    perturb_noise,
-    is_different_enough,
-)
 
 
 def setup_mga_model(config: SPORESConfig, network):
