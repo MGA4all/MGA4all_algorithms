@@ -26,11 +26,11 @@ from .direction_similarity_checks import (
 
 
 def setup_mga_model(config: SPORESConfig, network):
-    minimum_cost = extract_minimum_feasible_cost(network)
+    minimum_cost, fixed_cost = extract_minimum_feasible_cost(network)
     slack = config.cost_slack
     network_mga, model_mga = create_mga_model(network)
-    add_slack_constraint(model_mga, minimum_cost, slack)
-    return network_mga, model_mga
+    add_slack_constraint(model_mga, minimum_cost, fixed_cost, slack)
+    return (network_mga, model_mga)
 
 
 def create_target_variables(config: SPORESConfig, network_mga):
@@ -130,7 +130,8 @@ def update_mga_objective(
 
 
 def spores_algorithm(
-    config: SPORESConfig, network_costopt: pypsa.Network, adaptive: bool = False
+    config: SPORESConfig, network_costopt: pypsa.Network, adaptive: bool = False,
+    export_nc: bool|str = False
 ):
 
     MAX_NOISE_ATTEMPTS = 50
@@ -256,6 +257,13 @@ def spores_algorithm(
         )
         mga_weights[iteration] = mga_weights_series.copy()
         mga_diversification_weights = diversification_weights_series
+
+        if export_nc == False:
+            pass
+        elif type(export_nc) == str:
+            network_mga.export_to_netcdf(export_nc + "mga_{}.nc".format(iteration))
+        else:
+            network_mga.export_to_netcdf("mga_{}.nc".format(iteration))
 
     mga_spatial_alternatives = alternatives_dict_to_frame(mga_spatial_alternatives)
     mga_alternatives = alternatives_dict_to_frame(mga_alternatives)

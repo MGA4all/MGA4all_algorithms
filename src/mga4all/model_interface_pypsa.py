@@ -281,7 +281,7 @@ def extract_minimum_feasible_cost(network):
 
     true_optimal_cost = optimal_cost - fixed_cost
 
-    return true_optimal_cost
+    return true_optimal_cost, fixed_cost
 
 
 def create_mga_model(network):
@@ -295,16 +295,19 @@ def create_mga_model(network):
     return network_mga, model_mga
 
 
-def add_slack_constraint(model_mga, true_optimal_cost, slack):
+def add_slack_constraint(model_mga, true_optimal_cost, fixed_cost, slack):
     original_objective = model_mga.objective
+
     cost_expr = (
         original_objective
         if not hasattr(original_objective, "expression")
         else original_objective.expression
     )
 
+    variable_cost_expr = cost_expr - fixed_cost
+
     model_mga.add_constraints(
-        cost_expr <= (1 + slack) * true_optimal_cost,
+        variable_cost_expr <= (1 + slack) * true_optimal_cost,
         name="budget",
     )
 

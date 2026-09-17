@@ -12,12 +12,11 @@ from .validate import HopSkipJumpConfig
 from .utils import alternatives_dict_to_frame
 
 
-def setup_mga_model(config: HopSkipJumpConfig, network_costopt):
-    network = network_costopt
-    minimum_cost = extract_minimum_feasible_cost(network)
+def setup_mga_model(config: HopSkipJumpConfig, network):
+    minimum_cost, fixed_cost = extract_minimum_feasible_cost(network)
     slack = config.cost_slack
     network_mga, model_mga = create_mga_model(network)
-    add_slack_constraint(model_mga, minimum_cost, slack)
+    add_slack_constraint(model_mga, minimum_cost, fixed_cost, slack)
     return (network_mga, model_mga)
 
 
@@ -59,7 +58,8 @@ def update_mga_objective(
 
 
 def hop_skip_jump_algorithm(
-    config: HopSkipJumpConfig, network_costopt: pypsa.Network, noise_threshold=0.001
+    config: HopSkipJumpConfig, network_costopt: pypsa.Network, noise_threshold=0.001,
+    export_nc: str|bool = False
 ):
     mga_alternatives = {}
     mga_spatial_alternatives = {}
@@ -94,6 +94,13 @@ def hop_skip_jump_algorithm(
             extract_diversified_capacity(target_techs, network_mga)
         )
         mga_weights[iteration] = mga_weights_series.copy()
+
+        if export_nc == False:
+            pass
+        elif type(export_nc) == str:
+            network_mga.export_to_netcdf(export_nc + "mga_{}.nc".format(iteration))
+        else:
+            network_mga.export_to_netcdf("mga_{}.nc".format(iteration))
 
     mga_spatial_alternatives = alternatives_dict_to_frame(mga_spatial_alternatives)
     mga_alternatives = alternatives_dict_to_frame(mga_alternatives)
