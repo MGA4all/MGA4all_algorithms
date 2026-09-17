@@ -207,7 +207,6 @@ marimo/_lsp/
 __marimo__/
 
 # Local files
-docs/tutorials/__debugger__.ipynb
-docs/tutorials/__experiment__.ipynb
+docs/tutorials/local/
 src/mga4all/__version__.py
 configs/experiment/
