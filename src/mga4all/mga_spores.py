@@ -130,8 +130,10 @@ def update_mga_objective(
 
 
 def spores_algorithm(
-    config: SPORESConfig, network_costopt: pypsa.Network, adaptive: bool = False,
-    export_nc: bool|str = False
+    config: SPORESConfig,
+    network_costopt: pypsa.Network,
+    adaptive: bool = False,
+    export_nc: bool | str = False,
 ):
 
     MAX_NOISE_ATTEMPTS = 50

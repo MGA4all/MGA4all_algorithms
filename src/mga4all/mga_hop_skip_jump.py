@@ -58,8 +58,10 @@ def update_mga_objective(
 
 
 def hop_skip_jump_algorithm(
-    config: HopSkipJumpConfig, network_costopt: pypsa.Network, noise_threshold=0.001,
-    export_nc: str|bool = False
+    config: HopSkipJumpConfig,
+    network_costopt: pypsa.Network,
+    noise_threshold=0.001,
+    export_nc: str | bool = False,
 ):
     mga_alternatives = {}
     mga_spatial_alternatives = {}

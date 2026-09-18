@@ -58,8 +58,9 @@ def update_mga_objective(
 
 
 def random_directions_algorithm(
-    config: RandomDirectionsConfig, network_costopt: pypsa.Network,
-    export_nc: str|bool = False
+    config: RandomDirectionsConfig,
+    network_costopt: pypsa.Network,
+    export_nc: str | bool = False,
 ):
     mga_alternatives = {}
     mga_spatial_alternatives = {}
