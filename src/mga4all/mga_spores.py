@@ -26,10 +26,17 @@ from .direction_similarity_checks import (
 
 
 def setup_mga_model(config: SPORESConfig, network):
-    minimum_cost, fixed_cost = extract_minimum_feasible_cost(network)
+    minimum_cost, fixed_cost, full_costs = extract_minimum_feasible_cost(network)
     slack = config.cost_slack
     network_mga, model_mga = create_mga_model(network)
-    add_slack_constraint(model_mga, minimum_cost, fixed_cost, slack)
+    add_slack_constraint(
+        model_mga,
+        minimum_cost,
+        fixed_cost,
+        full_costs,
+        slack,
+        include_non_expandable=True,
+    )
     return (network_mga, model_mga)
 
 
