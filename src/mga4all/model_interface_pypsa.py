@@ -276,38 +276,52 @@ def extract_intensified_capacity(target_techs, config, network):
 
 
 def extract_minimum_feasible_cost(network):
-    optimal_cost = network.statistics.capex().sum() + network.statistics.opex().sum()
-    fixed_cost = network.statistics.installed_capex().sum()
+    cost_optimal_objective = network.objective
+    objective_constant = network.objective_constant
 
-    true_optimal_cost = optimal_cost - fixed_cost
-
-    return true_optimal_cost, fixed_cost
+    return cost_optimal_objective, objective_constant
 
 
 def create_mga_model(network):
+
+    has_objective_constant = "objective_constant" in network.model.variables
+
     network.model.solver_model = None
     network_mga = network.copy()  # Network object
 
     model_mga = network_mga.optimize.create_model(
-        include_objective_constant=False
+        include_objective_constant=has_objective_constant
     )  # Model object
 
     return network_mga, model_mga
 
 
-def add_slack_constraint(model_mga, true_optimal_cost, fixed_cost, slack):
+def add_slack_constraint(model_mga, cost_optimal_objective, objective_constant, slack):
     original_objective = model_mga.objective
 
-    cost_expr = (
-        original_objective
-        if not hasattr(original_objective, "expression")
-        else original_objective.expression
-    )
+    cost_objective = model_mga.objective
+    if hasattr(cost_objective, "expression"):
+        cost_objective = cost_objective.expression
 
-    variable_cost_expr = cost_expr - fixed_cost
+    has_objective_constant = "objective_constant" in model_mga.model.variables
+
+    if has_objective_constant:
+        # Objective already contains the negative constant contribution.
+        budget_lhs = cost_objective
+        budget_rhs = (1 + slack) * (
+            cost_optimal_objective  # which already subtracted the constant, too
+            + objective_constant
+        ) - objective_constant
+    else:
+        # Objective contains only the variable-dependent terms.
+        budget_lhs = cost_objective
+        budget_rhs = (
+            (1 + slack)
+            * cost_optimal_objective  # which hasn't subtracted the constant, so it's large already!
+        )
 
     model_mga.add_constraints(
-        variable_cost_expr <= (1 + slack) * true_optimal_cost,
+        budget_lhs <= budget_rhs,
         name="budget",
     )
 
