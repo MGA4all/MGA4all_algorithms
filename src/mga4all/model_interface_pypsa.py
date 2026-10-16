@@ -310,7 +310,7 @@ def add_slack_constraint(
     if hasattr(cost_objective, "expression"):
         cost_objective = cost_objective.expression
 
-    has_objective_constant = "objective_constant" in model_mga.model.variables
+    has_objective_constant = "objective_constant" in model_mga.variables
 
     if include_non_expandable:
         delta_cost = full_costs - (cost_optimal_objective + objective_constant)
