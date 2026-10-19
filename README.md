@@ -57,12 +57,18 @@ with open("configs/test_config_random_directions.yaml") as yf:
 mynetwork = create_pypsa_network()
 mynetwork.optimize(sovler_options={'solver_name': 'highs'})
 
-mga_alternatives, mga_spatial_alternatives = random_directions_algorithm(test_config, mynetwork)
+mga_spatial_alternatives, mga_alternatives, mga_weights = random_directions_algorithm(
+  test_config, 
+  mynetwork,
+  export_to_nc='my_output_folder/' # if you want to export the full model outputs in .nc format
+  )
 ```
 
-### Tutorials
+### Tutorials and method benchmarking
 
 In `docs\tutorials`, you will find several jupyter notebooks that showcase how to use different MGA algorithms on the above example PyPSA model, and how to inspect their outputs.
+
+You will also find a method-benchmarking exercise, which enables comparing the outputs of different methods over the same number of generated alternatives.
 
 ### Contributors
 
