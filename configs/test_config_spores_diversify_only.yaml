@@ -1,4 +1,4 @@
-# yaml configuration file for running SPORES algorithm
+# yaml configuration file for running the SPORES algorithm
 
 config_name: "spores"
 model_interface: pypsa

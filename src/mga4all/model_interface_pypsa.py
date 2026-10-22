@@ -317,9 +317,9 @@ def add_slack_constraint(
     else:
         delta_cost = 0
 
+    budget_lhs = cost_objective
     if has_objective_constant:
         # Objective already contains the negative constant contribution.
-        budget_lhs = cost_objective
         budget_rhs = (
             (1 + slack)
             * (
@@ -332,7 +332,6 @@ def add_slack_constraint(
         )
     else:
         # Objective contains only the variable-dependent terms.
-        budget_lhs = cost_objective
         budget_rhs = (1 + slack) * (
             cost_optimal_objective  # which hasn't subtracted the constant, so it's large already!
             + delta_cost
