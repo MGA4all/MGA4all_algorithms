@@ -93,6 +93,9 @@ class HopSkipJumpConfig(SimpleMGAConfig):
 class RandomDirectionsConfig(SimpleMGAConfig):
     pass
 
+class ComboConfig(SimpleMGAConfig):
+    pass
+
 
 class SPORESConfig(SimpleMGAConfig):
     intensification_coefficient: Literal[-1, 0, 1] | list[Literal[-1, 0, 1]] = 0
