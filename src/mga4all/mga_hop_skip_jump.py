@@ -106,10 +106,10 @@ def hop_skip_jump_algorithm(
 
         if export_nc == False:
             pass
-        elif type(export_nc) == str:
-            network_mga.export_to_netcdf(export_nc + "mga_{}.nc".format(iteration))
+        elif isinstance(export_nc, str):
+            network_mga.export_to_netcdf(f"{export_nc}mga_{iteration}.nc")
         else:
-            network_mga.export_to_netcdf("mga_{}.nc".format(iteration))
+            network_mga.export_to_netcdf(f"mga_{iteration}.nc")
 
     mga_spatial_alternatives = alternatives_dict_to_frame(mga_spatial_alternatives)
     mga_alternatives = alternatives_dict_to_frame(mga_alternatives)
