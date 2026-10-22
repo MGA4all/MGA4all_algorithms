@@ -1,4 +1,4 @@
-# yaml configuration file for running HSJ algorithm
+# yaml configuration file for running the random-directions algorithm
 
 config_name: "random_directions"
 model_interface: pypsa

@@ -1,4 +1,4 @@
-# yaml configuration file for running HSJ algorithm
+# yaml configuration file for running the Hop-Skip-Jump algorithm
 
 config_name: "hop-skip-jump"
 model_interface: pypsa
