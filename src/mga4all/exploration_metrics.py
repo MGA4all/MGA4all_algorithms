@@ -300,6 +300,7 @@ def _shoelace_area(points_buffered, num_points):
         area -= points_buffered[j, 0] * points_buffered[i, 1]
     return abs(area) / 2.0
 
+
 ###
 # Plotting 2D convex hulls estimated via VESA --------------
 ###
@@ -411,7 +412,6 @@ def plot_vesa_projections(
     return fig, axes
 
 
-
 import math
 from itertools import combinations
 
@@ -465,21 +465,14 @@ def plot_vesa_projections_multiple(
 
     for label, df in datasets.items():
         if not df.index.is_unique:
-            raise ValueError(
-                f"Dataset {label!r} contains duplicate variable names."
-            )
+            raise ValueError(f"Dataset {label!r} contains duplicate variable names.")
         if set(df.index) != set(variables):
-            raise ValueError(
-                f"Dataset {label!r} has different decision variables."
-            )
+            raise ValueError(f"Dataset {label!r} has different decision variables.")
 
     # Default colours from Matplotlib's categorical colour cycle.
     if colors is None:
         cmap = plt.get_cmap("tab10")
-        colors = {
-            label: cmap(i % 10)
-            for i, label in enumerate(labels)
-        }
+        colors = {label: cmap(i % 10) for i, label in enumerate(labels)}
     else:
         missing = set(labels) - set(colors)
         if missing:

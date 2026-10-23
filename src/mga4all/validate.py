@@ -93,6 +93,7 @@ class HopSkipJumpConfig(SimpleMGAConfig):
 class RandomDirectionsConfig(SimpleMGAConfig):
     pass
 
+
 class ComboConfig(SimpleMGAConfig):
     pass
 
