@@ -70,8 +70,8 @@ def generate_random_integer_weights(
 def generate_combined_weights(
     index: pd.Index,
     config: ComboConfig,
-    random_share: float = 0.25,
-    minmax_share: float = 0.75,
+    random_share: float,
+    minmax_share: float,
 ) -> pd.DataFrame:
     """
     Combines random weights generated following a 'random-direction' uniform sampling
@@ -118,8 +118,8 @@ def update_mga_objective(
 def combo_algorithm(
     config: ComboConfig,
     network_costopt: pypsa.Network,
-    random_share: float,
-    minmax_share: float,
+    random_share: float  = 0.25,
+    minmax_share: float  = 0.75,
     export_nc: str | bool = False,
 ):
     mga_alternatives = {}
