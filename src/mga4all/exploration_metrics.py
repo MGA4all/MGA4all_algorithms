@@ -9,6 +9,7 @@ Changes:
 - Updated the functions to handle inputs in the format required by MGA4all project
 - Updated some of the function descriptions
 - Created higher-level function that combines all metrics into a single dataframe
+- Created plotting functionalities to display the 2D convex hull projections of VESA
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -298,3 +299,262 @@ def _shoelace_area(points_buffered, num_points):
         area += points_buffered[i, 0] * points_buffered[j, 1]
         area -= points_buffered[j, 0] * points_buffered[i, 1]
     return abs(area) / 2.0
+
+###
+# Plotting 2D convex hulls estimated via VESA --------------
+###
+
+
+import math
+from itertools import combinations
+
+import matplotlib.pyplot as plt
+
+
+def plot_vesa_projections(
+    points,
+    ncols=4,
+    figsize_per_panel=(4, 3.5),
+    show_points=True,
+    fill_hulls=True,
+):
+    """
+    Plot the convex hull of every pairwise projection of MGA alternatives.
+
+    Parameters
+    ----------
+    points : pd.DataFrame
+        Rows are decision variables (technologies) and columns are MGA
+        alternatives.
+    ncols : int, default=4
+        Number of subplot columns.
+    figsize_per_panel : tuple, default=(4, 3.5)
+        Width and height per subplot, in inches.
+    show_points : bool, default=True
+        Whether to display the original alternatives.
+    fill_hulls : bool, default=True
+        Whether to fill the convex hull polygons.
+
+    Returns
+    -------
+    fig : matplotlib.figure.Figure
+    axes : np.ndarray
+        Array of subplot axes, including any hidden unused axes.
+    """
+    variables = points.index.tolist()
+    pairs = list(combinations(variables, 2))
+
+    if not pairs:
+        raise ValueError("At least two decision variables are required.")
+
+    n_panels = len(pairs)
+    nrows = math.ceil(n_panels / ncols)
+
+    fig, axes = plt.subplots(
+        nrows,
+        ncols,
+        figsize=(
+            figsize_per_panel[0] * ncols,
+            figsize_per_panel[1] * nrows,
+        ),
+        squeeze=False,
+    )
+    axes_flat = axes.ravel()
+
+    for ax, (var1, var2) in zip(axes_flat, pairs):
+        # Shape: (number of alternatives, 2)
+        projection = points.loc[[var1, var2]].to_numpy().T
+
+        # Calculate the convex hull.
+        hull = _convex_hull(projection)
+
+        if len(hull) >= 3:
+            # Close the polygon for plotting.
+            closed_hull = np.vstack([hull, hull[0]])
+
+            if fill_hulls:
+                ax.fill(
+                    closed_hull[:, 0],
+                    closed_hull[:, 1],
+                    alpha=0.2,
+                )
+
+            ax.plot(
+                closed_hull[:, 0],
+                closed_hull[:, 1],
+                linewidth=1.5,
+            )
+
+        elif len(hull) > 0:
+            # Handle degenerate projections.
+            ax.plot(hull[:, 0], hull[:, 1], linewidth=1.5)
+
+        if show_points:
+            ax.scatter(
+                projection[:, 0],
+                projection[:, 1],
+                s=12,
+                alpha=0.5,
+            )
+
+        ax.set_xlabel(str(var1))
+        ax.set_ylabel(str(var2))
+        ax.grid(True, alpha=0.25)
+
+    # Hide unused panels in the final row.
+    for ax in axes_flat[n_panels:]:
+        ax.set_visible(False)
+
+    fig.suptitle("Pairwise MGA projections", y=1.01)
+    fig.tight_layout()
+
+    return fig, axes
+
+
+
+import math
+from itertools import combinations
+
+import matplotlib.pyplot as plt
+import numpy as np
+
+
+def plot_vesa_projections_multiple(
+    datasets,
+    ncols=4,
+    figsize_per_panel=(4, 3.5),
+    colors=None,
+    point_size=12,
+    point_alpha=0.5,
+):
+    """
+    Plot overlapping convex hulls and alternatives for multiple MGA datasets.
+
+    Parameters
+    ----------
+    datasets : dict[str, pd.DataFrame]
+        Dictionary mapping dataset labels to DataFrames. Each DataFrame
+        has decision variables as rows and MGA alternatives as columns.
+        All datasets must contain the same decision variables.
+    ncols : int, default=4
+        Number of subplot columns.
+    figsize_per_panel : tuple, default=(4, 3.5)
+        Width and height per subplot, in inches.
+    colors : dict[str, str] or None, default=None
+        Mapping of dataset labels to Matplotlib colours. If None, colours
+        are assigned automatically.
+    point_size : float, default=12
+        Marker size for alternatives.
+    point_alpha : float, default=0.5
+        Transparency of the alternative markers.
+
+    Returns
+    -------
+    fig : matplotlib.figure.Figure
+    axes : np.ndarray
+        Array of subplot axes, including hidden unused axes.
+    """
+    if not datasets:
+        raise ValueError("At least one dataset is required.")
+
+    labels = list(datasets)
+    variables = datasets[labels[0]].index.tolist()
+
+    if len(variables) < 2:
+        raise ValueError("At least two decision variables are required.")
+
+    for label, df in datasets.items():
+        if not df.index.is_unique:
+            raise ValueError(
+                f"Dataset {label!r} contains duplicate variable names."
+            )
+        if set(df.index) != set(variables):
+            raise ValueError(
+                f"Dataset {label!r} has different decision variables."
+            )
+
+    # Default colours from Matplotlib's categorical colour cycle.
+    if colors is None:
+        cmap = plt.get_cmap("tab10")
+        colors = {
+            label: cmap(i % 10)
+            for i, label in enumerate(labels)
+        }
+    else:
+        missing = set(labels) - set(colors)
+        if missing:
+            raise ValueError(f"Missing colours for datasets: {missing}")
+
+    pairs = list(combinations(variables, 2))
+    n_panels = len(pairs)
+    nrows = math.ceil(n_panels / ncols)
+
+    fig, axes = plt.subplots(
+        nrows,
+        ncols,
+        figsize=(
+            figsize_per_panel[0] * ncols,
+            figsize_per_panel[1] * nrows,
+        ),
+        squeeze=False,
+    )
+    axes_flat = axes.ravel()
+
+    for ax, (var1, var2) in zip(axes_flat, pairs):
+        for label, df in datasets.items():
+            # Shape: (number of alternatives, 2)
+            projection = df.loc[[var1, var2]].to_numpy().T
+            color = colors[label]
+
+            # Plot alternatives.
+            ax.scatter(
+                projection[:, 0],
+                projection[:, 1],
+                s=point_size,
+                alpha=point_alpha,
+                color=color,
+                label=label,
+            )
+
+            # Calculate and plot the convex hull.
+            hull = _convex_hull(projection)
+
+            if len(hull) >= 3:
+                closed_hull = np.vstack([hull, hull[0]])
+
+                ax.plot(
+                    closed_hull[:, 0],
+                    closed_hull[:, 1],
+                    color=color,
+                    linewidth=1.8,
+                )
+            elif len(hull) > 0:
+                ax.plot(
+                    hull[:, 0],
+                    hull[:, 1],
+                    color=color,
+                    linewidth=1.8,
+                )
+
+        ax.set_xlabel(str(var1))
+        ax.set_ylabel(str(var2))
+        ax.grid(True, alpha=0.25)
+
+    # Hide unused panels.
+    for ax in axes_flat[n_panels:]:
+        ax.set_visible(False)
+
+    # One shared legend for the entire figure.
+    handles, legend_labels = axes_flat[0].get_legend_handles_labels()
+    fig.legend(
+        handles,
+        legend_labels,
+        loc="upper center",
+        bbox_to_anchor=(0.5, 1.01),
+        ncol=len(labels),
+    )
+
+    fig.suptitle("Pairwise MGA projections", y=1.04)
+    fig.tight_layout()
+
+    return fig, axes
