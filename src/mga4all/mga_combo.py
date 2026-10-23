@@ -42,9 +42,8 @@ def create_target_variables(config: ComboConfig, network_mga):
 
     return target_techs, deployed_capacity_series, spatial
 
-def generate_random_weights(
-    index: pd.Index, alternatives: int
-) -> pd.DataFrame:
+
+def generate_random_weights(index: pd.Index, alternatives: int) -> pd.DataFrame:
     """Generate uniformly-random weights using index of deployed_capacity."""
     random_values = np.random.uniform(-1, 1, size=(len(index), alternatives))
     return pd.DataFrame(
@@ -53,9 +52,8 @@ def generate_random_weights(
         columns=range(1, alternatives + 1),
     )
 
-def generate_random_integer_weights(
-    index: pd.Index, alternatives: int
-) -> pd.DataFrame:
+
+def generate_random_integer_weights(index: pd.Index, alternatives: int) -> pd.DataFrame:
     """Generate random weights in the integer set [-1, 0, 1] using index of deployed_capacity."""
     random_values = np.random.choice(
         [-1, 0, 1],
@@ -66,6 +64,7 @@ def generate_random_integer_weights(
         index=index,
         columns=range(1, alternatives + 1),
     )
+
 
 def generate_combined_weights(
     index: pd.Index,
@@ -97,9 +96,7 @@ def generate_combined_weights(
         ignore_index=True,
     )
 
-    combined_weights = combined_weights.sample(
-        axis=1, frac=1
-    )
+    combined_weights = combined_weights.sample(axis=1, frac=1)
 
     combined_weights.columns = range(1, config.alternatives + 1)
 
@@ -118,8 +115,8 @@ def update_mga_objective(
 def combo_algorithm(
     config: ComboConfig,
     network_costopt: pypsa.Network,
-    random_share: float  = 0.25,
-    minmax_share: float  = 0.75,
+    random_share: float = 0.25,
+    minmax_share: float = 0.75,
     export_nc: str | bool = False,
 ):
     mga_alternatives = {}
@@ -136,8 +133,10 @@ def combo_algorithm(
 
     # Pre-compute all randomised weights; helps with parallelisation
     mga_weights = generate_combined_weights(
-        index=deployed_capacity_series.index, config=config,
-        random_share=random_share, minmax_share=minmax_share 
+        index=deployed_capacity_series.index,
+        config=config,
+        random_share=random_share,
+        minmax_share=minmax_share,
     )
 
     for iteration, weights in mga_weights.items():
