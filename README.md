@@ -11,6 +11,7 @@ Various Modelling to Generate Alternative (MGA) algorithms for different energy 
 
 | Algorithm                                                         | PyPSA + linopy |
 |-------------------------------------------------------------------|----------------|
+| [Combo](https://doi.org/10.1088/2753-3751/ad7d10)                 | ✅             |
 | [SPORES](https://doi.org/10.1016/j.joule.2020.08.002)             | ✅             |
 | [Random Directions](https://doi.org/10.1016/j.energy.2017.03.043) | ✅             |
 | [Hop-Skip-JUmp](https://doi.org/10.1016/j.eneco.2010.05.002)      | ✅             |   
