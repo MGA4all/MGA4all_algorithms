@@ -1,0 +1,8 @@
+# yaml configuration file for running the combo algorithm
+
+config_name: "combo"
+model_interface: pypsa
+cost_slack: 0.1
+alternatives: 80
+spatially_explicit: True
+diversified_technologies: ["wind", "solar", "gas", "battery"]

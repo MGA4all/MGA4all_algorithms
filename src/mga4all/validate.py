@@ -94,6 +94,10 @@ class RandomDirectionsConfig(SimpleMGAConfig):
     pass
 
 
+class ComboConfig(SimpleMGAConfig):
+    pass
+
+
 class SPORESConfig(SimpleMGAConfig):
     intensification_coefficient: Literal[-1, 0, 1] | list[Literal[-1, 0, 1]] = 0
     """Intensification coefficient, must be 0, 1, -1, or a list of those."""

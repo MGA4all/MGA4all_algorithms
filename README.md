@@ -9,11 +9,13 @@ Various Modelling to Generate Alternative (MGA) algorithms for different energy 
 
 ## Implemented Algorithms and supported model backends
 
-| Algorithm                                                         | PyPSA + linopy |
-|-------------------------------------------------------------------|----------------|
-| [SPORES](https://doi.org/10.1016/j.joule.2020.08.002)             | ✅             |
-| [Random Directions](https://doi.org/10.1016/j.energy.2017.03.043) | ✅             |
-| [Hop-Skip-JUmp](https://doi.org/10.1016/j.eneco.2010.05.002)      | ✅             |   
+| Algorithm                                                                     | PyPSA + linopy |
+|-------------------------------------------------------------------------------|----------------|
+| [Combo](https://doi.org/10.1088/2753-3751/ad7d10)                             | ✅             |
+| [SPORES](https://doi.org/10.1016/j.joule.2020.08.002) (new, improved version) | ✅             |
+| [Random Directions](https://doi.org/10.1016/j.energy.2017.03.043)             | ✅             |
+| [Min-Max](https://doi.org/10.1021/es301249p) (acessible within Combo)         | ✅             |
+| [Hop-Skip-JUmp](https://doi.org/10.1016/j.eneco.2010.05.002)                  | ✅             |   
 
 ## Running MGA4all
 
