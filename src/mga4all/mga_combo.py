@@ -2,6 +2,8 @@ import pandas as pd
 import pypsa
 import numpy as np
 
+from math import comb
+
 from .model_interface_pypsa import (
     match_config_techs_to_model_techs,
     extract_diversified_capacity,
@@ -53,24 +55,69 @@ def generate_random_weights(index: pd.Index, alternatives: int) -> pd.DataFrame:
     )
 
 
-def generate_random_integer_weights(index: pd.Index, alternatives: int) -> pd.DataFrame:
-    """Generate random weights in the integer set [-1, 0, 1] using index of deployed_capacity."""
-    random_values = np.random.choice(
-        [-1, 0, 1],
-        size=(len(index), alternatives),
+def generate_sparse_integer_weights(
+    index: pd.Index,
+    alternatives: int,
+    k_max: int,
+    rng: np.random.Generator | None = None,
+) -> pd.DataFrame:
+
+    if rng is None:
+        rng = np.random.default_rng()
+
+    n = len(index)
+
+    k_min=1
+
+    if k_max < 1:
+        raise ValueError("k_max must be greater than or equal to 1")
+    
+    if k_max > n:
+        raise ValueError(f"k_max={k_max} cannot exceed number of variables ({n})")
+
+    max_unique = sum(
+        comb(n, k) * (2 ** k)
+        for k in range(k_min, k_max + 1)
     )
+
+    if alternatives > max_unique:
+        raise ValueError(
+            f"Requested {alternatives} alternatives, "
+            f"but only {max_unique} unique weight vectors exist."
+        )
+
+    weights = np.zeros((n, alternatives), dtype=int)
+
+    seen = set()
+
+    for j in range(alternatives):
+        
+        while True:
+            k = rng.integers(k_min, k_max + 1)
+            candidate = np.zeros(n, dtype=int)
+
+            selected = rng.choice(n, size=k, replace=False)
+            candidate[selected] = rng.choice([-1, 1], size=k)
+
+            signature = tuple(candidate)
+
+            if signature not in seen:
+                seen.add(signature)
+                weights[:, j] = candidate
+                break
+            
     return pd.DataFrame(
-        random_values,
+        weights,
         index=index,
         columns=range(1, alternatives + 1),
     )
-
 
 def generate_combined_weights(
     index: pd.Index,
     config: ComboConfig,
     random_share: float,
     minmax_share: float,
+    k_max: int,
 ) -> pd.DataFrame:
     """
     Combines random weights generated following a 'random-direction' uniform sampling
@@ -88,7 +135,7 @@ def generate_combined_weights(
     n_minmax = config.alternatives - n_random
 
     random_weights = generate_random_weights(index, n_random)
-    minmax_weights = generate_random_integer_weights(index, n_minmax)
+    minmax_weights = generate_sparse_integer_weights(index, n_minmax, k_max)
 
     combined_weights = pd.concat(
         [random_weights, minmax_weights],
@@ -117,6 +164,7 @@ def combo_algorithm(
     network_costopt: pypsa.Network,
     random_share: float = 0.25,
     minmax_share: float = 0.75,
+    k_max: int = 2,
     export_nc: str | bool = False,
 ):
     mga_alternatives = {}
@@ -137,6 +185,7 @@ def combo_algorithm(
         config=config,
         random_share=random_share,
         minmax_share=minmax_share,
+        k_max=k_max
     )
 
     for iteration, weights in mga_weights.items():
