@@ -31,6 +31,10 @@ SOFTWARE.
 
 """
 
+import math
+from itertools import combinations
+
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
@@ -60,7 +64,6 @@ def exploration_metrics_progression(points, lb, ub):
     )
 
     for alt in metrics_df.index:
-
         metrics_df.loc[alt, "Shannon"] = mean_of_shannon_of_projections(
             points.iloc[:, 0 : alt + 1], lb=lb, ub=ub
         )
@@ -302,12 +305,6 @@ def _shoelace_area(points_buffered, num_points):
 ###
 # Plotting 2D convex hulls estimated via VESA --------------
 ###
-
-
-import math
-from itertools import combinations
-
-import matplotlib.pyplot as plt
 
 
 def plot_vesa_projections(

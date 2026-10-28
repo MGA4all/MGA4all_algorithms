@@ -10,7 +10,7 @@ from .model_interface_pypsa import (
     extract_minimum_feasible_cost,
     match_config_techs_to_model_techs,
 )
-from .utils import alternatives_dict_to_frame
+from .utils import alternatives_dict_to_frame, save_network
 from .validate import ComboConfig
 
 
@@ -35,7 +35,7 @@ def create_target_variables(config: ComboConfig, network_mga):
     deployed_capacity_series_spatial, deployed_capacity_series_aggregate = (
         extract_diversified_capacity(target_techs, network_mga)
     )
-    if spatial == True:
+    if spatial:
         deployed_capacity_series = deployed_capacity_series_spatial
     else:
         deployed_capacity_series = deployed_capacity_series_aggregate
@@ -150,12 +150,7 @@ def combo_algorithm(
             extract_diversified_capacity(target_techs, network_mga)
         )
 
-        if export_nc == False:
-            pass
-        elif type(export_nc) == str:
-            network_mga.export_to_netcdf(export_nc + f"mga_{iteration}.nc")
-        else:
-            network_mga.export_to_netcdf(f"mga_{iteration}.nc")
+        save_network(export_nc, iteration, network_mga)
 
     mga_spatial_alternatives = alternatives_dict_to_frame(mga_spatial_alternatives)
     mga_alternatives = alternatives_dict_to_frame(mga_alternatives)

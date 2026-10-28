@@ -6,7 +6,7 @@ from scipy.stats import spearmanr
 def ranking_similarity(weights_a, weights_b):
     rank_a = weights_a.argsort().argsort()
     rank_b = weights_b.argsort().argsort()
-    corr, pvalue = spearmanr(rank_a, rank_b)
+    corr, _ = spearmanr(rank_a, rank_b)
     return corr
 
 
