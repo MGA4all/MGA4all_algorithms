@@ -1,5 +1,6 @@
-import pandas as pd
 from copy import deepcopy
+
+import pandas as pd
 
 PYPSA_CAPACITY_VARIABLES = {
     "Generator": "p_nom",
@@ -47,35 +48,21 @@ def match_config_techs_to_model_techs(config, network):
             if matched_intensified:
                 intensified_model_techs[component.name] = matched_intensified
 
-    try:
-        flat_intensified = [
-            item
-            for sublist in list(intensified_model_techs.values())
-            for item in sublist
-        ]
-        flat_diversified = [
-            item
-            for sublist in list(diversified_model_techs.values())
-            for item in sublist
-        ]
-        flat = flat_diversified + flat_intensified
-    except Exception:
-        flat = [
-            item
-            for sublist in list(diversified_model_techs.values())
-            for item in sublist
-        ]
+    flat_intensified = [
+        item for sublist in list(intensified_model_techs.values()) for item in sublist
+    ]
+    flat_diversified = [
+        item for sublist in list(diversified_model_techs.values()) for item in sublist
+    ]
+    flat = flat_diversified + flat_intensified
 
-    print(
-        "Technologies {} not found in the model".format(
-            sorted(list(config_techs - set(flat)))
-        )
-    )
+    print(f"Technologies {sorted(config_techs - set(flat))} not found in the model")
 
     if intensified_techs is not None:
-        model_techs = {}
-        model_techs["intensified"] = intensified_model_techs
-        model_techs["diversified"] = diversified_model_techs
+        model_techs = {
+            "intensified": intensified_model_techs,
+            "diversified": diversified_model_techs,
+        }
     else:
         model_techs = diversified_model_techs
 
@@ -86,27 +73,28 @@ def extract_capacity_bounds(network, config):
     """
     Extracts the upper and lower bounds of the targeted capacity decision variables
     """
-    component_tables = {}
-    component_tables["lb"] = {
-        "Generator": (network.generators, "p_nom_min", "carrier", "bus"),
-        "Link": (network.links, "p_nom_min", "carrier", "bus0"),
-        "Process": (network.processes, "p_nom_min", "carrier", "bus0"),
-        "StorageUnit": (network.storage_units, "p_nom_min", "carrier", "bus"),
-        "Store": (network.stores, "e_nom_min", "carrier", "bus"),
-        "Line": (network.lines, "s_nom_min", "carrier", "bus0"),
-    }
-    component_tables["ub"] = {
-        "Generator": (network.generators, "p_nom_max", "carrier", "bus"),
-        "Link": (network.links, "p_nom_max", "carrier", "bus0"),
-        "Process": (network.processes, "p_nom_max", "carrier", "bus0"),
-        "StorageUnit": (network.storage_units, "p_nom_max", "carrier", "bus"),
-        "Store": (network.stores, "e_nom_max", "carrier", "bus"),
-        "Line": (network.lines, "s_nom_max", "carrier", "bus0"),
+    component_tables = {
+        "lb": {
+            "Generator": (network.generators, "p_nom_min", "carrier", "bus"),
+            "Link": (network.links, "p_nom_min", "carrier", "bus0"),
+            "Process": (network.processes, "p_nom_min", "carrier", "bus0"),
+            "StorageUnit": (network.storage_units, "p_nom_min", "carrier", "bus"),
+            "Store": (network.stores, "e_nom_min", "carrier", "bus"),
+            "Line": (network.lines, "s_nom_min", "carrier", "bus0"),
+        },
+        "ub": {
+            "Generator": (network.generators, "p_nom_max", "carrier", "bus"),
+            "Link": (network.links, "p_nom_max", "carrier", "bus0"),
+            "Process": (network.processes, "p_nom_max", "carrier", "bus0"),
+            "StorageUnit": (network.storage_units, "p_nom_max", "carrier", "bus"),
+            "Store": (network.stores, "e_nom_max", "carrier", "bus"),
+            "Line": (network.lines, "s_nom_max", "carrier", "bus0"),
+        },
     }
 
     target_techs = match_config_techs_to_model_techs(config, network)
 
-    if "intensified" in target_techs.keys():
+    if "intensified" in target_techs:
         target_techs_merged = {}
         for group in target_techs.values():
             for component, technologies in group.items():
@@ -124,7 +112,7 @@ def extract_capacity_bounds(network, config):
 
     for bound in ["lb", "ub"]:
         for component, carriers in target_techs_merged.items():
-            df, opt_col, carrier_col, bus_col = component_tables[bound][component]
+            df, opt_col, carrier_col, _ = component_tables[bound][component]
 
             filtered = df[df[carrier_col].isin(carriers)]
 
@@ -185,14 +173,14 @@ def extract_diversified_capacity(target_techs, network):
         "Line": (network.lines, "s_nom_opt", "carrier", "bus0"),
     }
 
-    if "intensified" in target_techs.keys():
+    if "intensified" in target_techs:
         target_techs = target_techs["diversified"]  # focus on diversity here
 
     deployed_capacity_assets = {}
     deployed_capacity_buses = {}
 
     for component, carriers in target_techs.items():
-        df, opt_col, carrier_col, bus_col = component_tables[component]
+        df, opt_col, carrier_col, _ = component_tables[component]
 
         filtered = df[df[carrier_col].isin(carriers)]
 
@@ -223,7 +211,7 @@ def extract_intensified_capacity(target_techs, config, network):
         "Line": (network.lines, "s_nom_opt", "carrier", "bus0"),
     }
 
-    if "intensified" in target_techs.keys() and (len(target_techs["intensified"]) != 0):
+    if "intensified" in target_techs and (len(target_techs["intensified"]) != 0):
         mapping = {
             k: v
             for k, v in zip(
@@ -238,7 +226,7 @@ def extract_intensified_capacity(target_techs, config, network):
         deployed_capacity_buses = {}
 
         for component, carriers in target_techs.items():
-            df, opt_col, carrier_col, bus_col = component_tables[component]
+            df, _, carrier_col, _ = component_tables[component]
 
             filtered = df[df[carrier_col].isin(carriers)]
 
@@ -284,7 +272,6 @@ def extract_minimum_feasible_cost(network):
 
 
 def create_mga_model(network):
-
     has_objective_constant = "objective_constant" in network.model.variables
 
     network.model.solver_model = None
@@ -305,7 +292,6 @@ def add_slack_constraint(
     slack,
     include_non_expandable=True,
 ):
-
     cost_objective = model_mga.objective
     if hasattr(cost_objective, "expression"):
         cost_objective = cost_objective.expression
@@ -358,7 +344,7 @@ def convert_linear_weights_into_pypsa(
     weights = mga_weights_series
     pypsa_weights = {}
 
-    if "intensified" in target_techs.keys():
+    if "intensified" in target_techs:
         merged_target_techs = deepcopy(target_techs["diversified"])
 
         for component, carriers in target_techs["intensified"].items():

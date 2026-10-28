@@ -31,6 +31,10 @@ SOFTWARE.
 
 """
 
+import math
+from itertools import combinations
+
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
@@ -60,7 +64,6 @@ def exploration_metrics_progression(points, lb, ub):
     )
 
     for alt in metrics_df.index:
-
         metrics_df.loc[alt, "Shannon"] = mean_of_shannon_of_projections(
             points.iloc[:, 0 : alt + 1], lb=lb, ub=ub
         )
@@ -129,10 +132,8 @@ def _shannon_index(values, lb, ub, nbin, counts):
     for value in values:
         idx = int((value - lb) / bin_width)
 
-        if idx < 0:
-            idx = 0
-        if idx > nbin - 1:
-            idx = nbin - 1
+        idx = max(idx, 0)
+        idx = min(idx, nbin - 1)
 
         counts[idx] += 1
 
@@ -306,12 +307,6 @@ def _shoelace_area(points_buffered, num_points):
 ###
 
 
-import math
-from itertools import combinations
-
-import matplotlib.pyplot as plt
-
-
 def plot_vesa_projections(
     points,
     ncols=4,
@@ -410,13 +405,6 @@ def plot_vesa_projections(
     fig.tight_layout()
 
     return fig, axes
-
-
-import math
-from itertools import combinations
-
-import matplotlib.pyplot as plt
-import numpy as np
 
 
 def plot_vesa_projections_multiple(
