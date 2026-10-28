@@ -1,5 +1,6 @@
-import pandas as pd
 from copy import deepcopy
+
+import pandas as pd
 
 PYPSA_CAPACITY_VARIABLES = {
     "Generator": "p_nom",
@@ -67,9 +68,7 @@ def match_config_techs_to_model_techs(config, network):
         ]
 
     print(
-        "Technologies {} not found in the model".format(
-            sorted(list(config_techs - set(flat)))
-        )
+        f"Technologies {sorted(list(config_techs - set(flat)))} not found in the model"
     )
 
     if intensified_techs is not None:

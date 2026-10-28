@@ -1,7 +1,5 @@
-import pandas as pd
-import pypsa
 import numpy as np
-from pandas.api.types import is_number
+import pandas as pd
 from scipy.stats import spearmanr
 
 

@@ -129,10 +129,8 @@ def _shannon_index(values, lb, ub, nbin, counts):
     for value in values:
         idx = int((value - lb) / bin_width)
 
-        if idx < 0:
-            idx = 0
-        if idx > nbin - 1:
-            idx = nbin - 1
+        idx = max(idx, 0)
+        idx = min(idx, nbin - 1)
 
         counts[idx] += 1
 
@@ -410,13 +408,6 @@ def plot_vesa_projections(
     fig.tight_layout()
 
     return fig, axes
-
-
-import math
-from itertools import combinations
-
-import matplotlib.pyplot as plt
-import numpy as np
 
 
 def plot_vesa_projections_multiple(

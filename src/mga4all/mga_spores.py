@@ -1,28 +1,24 @@
+import numpy as np
 import pandas as pd
 import pypsa
-import numpy as np
 from pandas.api.types import is_number
 
-
+from .direction_similarity_checks import (
+    is_different_enough,
+    perturb_noise,
+    perturb_rank_flip,
+)
 from .model_interface_pypsa import (
-    match_config_techs_to_model_techs,
+    add_slack_constraint,
+    assign_mga_objective,
+    create_mga_model,
     extract_diversified_capacity,
     extract_intensified_capacity,
     extract_minimum_feasible_cost,
-    create_mga_model,
-    add_slack_constraint,
-    assign_mga_objective,
+    match_config_techs_to_model_techs,
 )
-from .validate import SPORESConfig
 from .utils import alternatives_dict_to_frame
-
-from .direction_similarity_checks import (
-    ranking_similarity,
-    angular_similarity,
-    perturb_rank_flip,
-    perturb_noise,
-    is_different_enough,
-)
+from .validate import SPORESConfig
 
 
 def setup_mga_model(config: SPORESConfig, network):
@@ -270,9 +266,9 @@ def spores_algorithm(
         if export_nc == False:
             pass
         elif type(export_nc) == str:
-            network_mga.export_to_netcdf(export_nc + "mga_{}.nc".format(iteration))
+            network_mga.export_to_netcdf(export_nc + f"mga_{iteration}.nc")
         else:
-            network_mga.export_to_netcdf("mga_{}.nc".format(iteration))
+            network_mga.export_to_netcdf(f"mga_{iteration}.nc")
 
     mga_spatial_alternatives = alternatives_dict_to_frame(mga_spatial_alternatives)
     mga_alternatives = alternatives_dict_to_frame(mga_alternatives)

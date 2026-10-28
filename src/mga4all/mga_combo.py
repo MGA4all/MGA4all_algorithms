@@ -1,17 +1,17 @@
+import numpy as np
 import pandas as pd
 import pypsa
-import numpy as np
 
 from .model_interface_pypsa import (
-    match_config_techs_to_model_techs,
-    extract_diversified_capacity,
-    extract_minimum_feasible_cost,
-    create_mga_model,
     add_slack_constraint,
     assign_mga_objective,
+    create_mga_model,
+    extract_diversified_capacity,
+    extract_minimum_feasible_cost,
+    match_config_techs_to_model_techs,
 )
-from .validate import ComboConfig
 from .utils import alternatives_dict_to_frame
+from .validate import ComboConfig
 
 
 def setup_mga_model(config: ComboConfig, network):
@@ -153,9 +153,9 @@ def combo_algorithm(
         if export_nc == False:
             pass
         elif type(export_nc) == str:
-            network_mga.export_to_netcdf(export_nc + "mga_{}.nc".format(iteration))
+            network_mga.export_to_netcdf(export_nc + f"mga_{iteration}.nc")
         else:
-            network_mga.export_to_netcdf("mga_{}.nc".format(iteration))
+            network_mga.export_to_netcdf(f"mga_{iteration}.nc")
 
     mga_spatial_alternatives = alternatives_dict_to_frame(mga_spatial_alternatives)
     mga_alternatives = alternatives_dict_to_frame(mga_alternatives)
