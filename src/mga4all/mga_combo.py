@@ -4,6 +4,8 @@ import pypsa
 
 from math import comb
 
+from math import comb
+
 from .model_interface_pypsa import (
     add_slack_constraint,
     assign_mga_objective,
