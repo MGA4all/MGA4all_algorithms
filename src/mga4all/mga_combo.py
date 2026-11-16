@@ -1,10 +1,8 @@
+from math import comb
+
 import numpy as np
 import pandas as pd
 import pypsa
-
-from math import comb
-
-from math import comb
 
 from .model_interface_pypsa import (
     add_slack_constraint,
@@ -69,18 +67,15 @@ def generate_sparse_integer_weights(
 
     n = len(index)
 
-    k_min=1
+    k_min = 1
 
     if k_max < 1:
         raise ValueError("k_max must be greater than or equal to 1")
-    
+
     if k_max > n:
         raise ValueError(f"k_max={k_max} cannot exceed number of variables ({n})")
 
-    max_unique = sum(
-        comb(n, k) * (2 ** k)
-        for k in range(k_min, k_max + 1)
-    )
+    max_unique = sum(comb(n, k) * (2**k) for k in range(k_min, k_max + 1))
 
     if alternatives > max_unique:
         raise ValueError(
@@ -93,7 +88,7 @@ def generate_sparse_integer_weights(
     seen = set()
 
     for j in range(alternatives):
-        
+
         while True:
             k = rng.integers(k_min, k_max + 1)
             candidate = np.zeros(n, dtype=int)
@@ -107,12 +102,13 @@ def generate_sparse_integer_weights(
                 seen.add(signature)
                 weights[:, j] = candidate
                 break
-            
+
     return pd.DataFrame(
         weights,
         index=index,
         columns=range(1, alternatives + 1),
     )
+
 
 def generate_combined_weights(
     index: pd.Index,
@@ -187,7 +183,7 @@ def combo_algorithm(
         config=config,
         random_share=random_share,
         minmax_share=minmax_share,
-        k_max=k_max
+        k_max=k_max,
     )
 
     for iteration, weights in mga_weights.items():
