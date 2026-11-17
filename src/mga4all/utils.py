@@ -31,3 +31,12 @@ def save_network(export_nc: str | bool, iteration: int, network_mga: pypsa.Netwo
         network_mga.export_to_netcdf(f"{export_nc}mga_{iteration}.nc")
     else:
         network_mga.export_to_netcdf(f"mga_{iteration}.nc")
+
+def normalise_point(z, lb, ub):
+    return 2.0 * (z - lb) / (ub - lb) - 1.0
+
+def denormalise_point(z_norm, lb, ub):
+    return 0.5 * (ub - lb) * (z_norm + 1.0) + lb
+
+
+
