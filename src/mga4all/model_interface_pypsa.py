@@ -13,16 +13,26 @@ PYPSA_CAPACITY_VARIABLES = {
 
 
 def match_config_techs_to_model_techs(config, network):
-    diversified_techs = set(config.diversified_technologies)
 
     if (
         hasattr(config, "intensified_technologies")
+        and hasattr(config, "diversified technologies")
         and len(config.intensified_technologies) != 0
     ):
         intensified_techs = set(config.intensified_technologies)
+        diversified_techs = set(config.diversified_technologies)
         config_techs = intensified_techs | diversified_techs
+    elif (
+        hasattr(config, "intensified_technologies")
+        and len(config.intensified_technologies) != 0
+        and not hasattr(config, "diversified_technologies")
+    ):
+        intensified_techs = set(config.intensified_technologies)
+        config_techs = intensified_techs
+        diversified_techs = None
     else:
         intensified_techs = None
+        diversified_techs = set(config.diversified_technologies)
         config_techs = diversified_techs
 
     diversified_model_techs = {}
@@ -35,9 +45,12 @@ def match_config_techs_to_model_techs(config, network):
             continue
 
         carriers_present = set(df["carrier"].dropna().astype(str))
-        matched_diversified = sorted(
-            t for t in diversified_techs if t in carriers_present
-        )
+        if diversified_techs is not None:        
+            matched_diversified = sorted(
+                t for t in diversified_techs if t in carriers_present
+            )
+        else:
+            matched_diversified = None
         if matched_diversified:
             diversified_model_techs[component.name] = matched_diversified
 
@@ -58,11 +71,13 @@ def match_config_techs_to_model_techs(config, network):
 
     print(f"Technologies {sorted(config_techs - set(flat))} not found in the model")
 
-    if intensified_techs is not None:
+    if intensified_techs is not None and diversified_techs is not None:
         model_techs = {
             "intensified": intensified_model_techs,
             "diversified": diversified_model_techs,
         }
+    elif intensified_techs is not None and diversified_techs is None:
+        model_techs = intensified_model_techs
     else:
         model_techs = diversified_model_techs
 
