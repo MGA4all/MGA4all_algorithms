@@ -16,7 +16,7 @@ def match_config_techs_to_model_techs(config, network):
 
     if (
         hasattr(config, "intensified_technologies")
-        and hasattr(config, "diversified technologies")
+        and hasattr(config, "diversified_technologies")
         and len(config.intensified_technologies) != 0
     ):
         intensified_techs = set(config.intensified_technologies)
