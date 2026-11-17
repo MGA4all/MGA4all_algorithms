@@ -17,8 +17,14 @@ from .model_interface_pypsa import (
     match_config_techs_to_model_techs,
     convert_linear_weights_into_pypsa,
 )
-from .utils import alternatives_dict_to_frame, save_network, normalise_point, denormalise_point
+from .utils import (
+    alternatives_dict_to_frame,
+    save_network,
+    normalise_point,
+    denormalise_point,
+)
 from .validate import ORACLEConfig
+
 
 @dataclass
 class OuterApproximation:
@@ -31,6 +37,7 @@ class OuterApproximation:
     def contains(self, point, tol=1e-8):
         point = np.asarray(point, dtype=float)
         return np.all(self.A @ point <= self.b + tol)
+
 
 def setup_mga_model(config: ORACLEConfig, network):
     minimum_cost, fixed_cost, full_costs = extract_minimum_feasible_cost(network)
@@ -60,12 +67,15 @@ def create_target_variables(config: ORACLEConfig, network_mga):
 
     return target_techs, deployed_capacity_series, spatial
 
-def generate_integer_weights(deployed_capacity_series: pd.Series, config: ORACLEConfig) -> pd.DataFrame:
+
+def generate_integer_weights(
+    deployed_capacity_series: pd.Series, config: ORACLEConfig
+) -> pd.DataFrame:
     """Generate targeted weights for each intensified variable using index of deployed_capacity."""
     columns = [
-        f'{tech}-{suffix}'
+        f"{tech}-{suffix}"
         for tech in config.intensified_technologies
-        for suffix in ['max', 'min']
+        for suffix in ["max", "min"]
     ]
     weights = pd.DataFrame(
         0.0,
@@ -74,11 +84,11 @@ def generate_integer_weights(deployed_capacity_series: pd.Series, config: ORACLE
     )
 
     for tech in weights.index:
-        for direction in ["min","max"]:
+        for direction in ["min", "max"]:
             if direction == "min":
-                weights.loc[tech,f'{tech}-{direction}'] = 1
-            elif direction =="max":
-                weights.loc[tech,f'{tech}-{direction}'] = -1
+                weights.loc[tech, f"{tech}-{direction}"] = 1
+            elif direction == "max":
+                weights.loc[tech, f"{tech}-{direction}"] = -1
     return weights
 
 
@@ -89,6 +99,7 @@ def update_mga_objective(
         network_mga, model_mga, mga_weights_series, target_techs, spatial=False
     )
     return (network_mga, model_mga)
+
 
 def initialise_outer_approximation(lb, ub):
     """
@@ -118,6 +129,7 @@ def initialise_outer_approximation(lb, ub):
         b.append(-lb[i])
 
     return np.asarray(A), np.asarray(b)
+
 
 def distance_to_inner_hull_linf(vertex, inner_points):
     """
@@ -194,6 +206,7 @@ def distance_to_inner_hull_linf(vertex, inner_points):
 
     return distance, projection, lambdas
 
+
 def extract_poi_expressions(
     network_mga,
     model_mga,
@@ -214,40 +227,35 @@ def extract_poi_expressions(
             }
     """
 
-    pois = sorted(
-        {
-            tech
-            for carriers in target_techs.values()
-            for tech in carriers
-        }
-    )
-    
+    pois = sorted({tech for carriers in target_techs.values() for tech in carriers})
+
     poi_expressions = {}
-    
+
     for poi in pois:
-    
-        # TODO: the current implementation restarts from the 
+
+        # TODO: the current implementation restarts from the
         # weight object created for the min/max initialisation.
         # It may be worth reconstructing the weights from scratch here,
         # so that they are decoupled from the initialisation.
         column = mga_weights.loc[poi].ne(0).idxmax()
         weights = mga_weights[column]
-    
+
         weight_dict = convert_linear_weights_into_pypsa(
             network=network_mga,
             mga_weights_series=weights,
             target_techs=target_techs,
             spatial=False,
         )
-    
+
         expr = network_mga.optimize.build_linexpr_from_weights(
             weight_dict,
             model=model_mga,
         )
-    
+
         poi_expressions[poi] = expr.sum()
 
     return poi_expressions
+
 
 def extract_projection_cut_normal(
     model_mga,
@@ -266,17 +274,14 @@ def extract_projection_cut_normal(
 
     for poi in pois:
 
-        upper = model_mga.constraints[
-            f"oracle_upper_{poi}"
-        ].dual.item()
+        upper = model_mga.constraints[f"oracle_upper_{poi}"].dual.item()
 
-        lower = model_mga.constraints[
-            f"oracle_lower_{poi}"
-        ].dual.item()
+        lower = model_mga.constraints[f"oracle_lower_{poi}"].dual.item()
 
         sigma[poi] = upper - lower
 
     return pd.Series(sigma, dtype=float)
+
 
 def enumerate_vertices(A, b):
     """
@@ -291,10 +296,12 @@ def enumerate_vertices(A, b):
     b = np.asarray(b, dtype=float)
 
     # cdd format: b - A x >= 0
-    H = np.hstack([
-        b.reshape(-1, 1),
-        -A,
-    ])
+    H = np.hstack(
+        [
+            b.reshape(-1, 1),
+            -A,
+        ]
+    )
 
     mat = cdd.matrix_from_array(H)
     mat.rep_type = cdd.RepType.INEQUALITY
@@ -304,15 +311,12 @@ def enumerate_vertices(A, b):
     generators = cdd.copy_generators(poly)
 
     vertices = np.array(
-        [
-            row[1:]
-            for row in generators.array
-            if row[0] == 1
-        ],
+        [row[1:] for row in generators.array if row[0] == 1],
         dtype=float,
     )
 
     return vertices
+
 
 def normalise_cut(
     sigma,
@@ -355,7 +359,8 @@ def normalise_cut(
     return sigma_norm, rhs_norm
 
 
-#--- Actual Algorithm ---#
+# --- Actual Algorithm ---#
+
 
 def oracle_algorithm(
     config: ORACLEConfig,
@@ -413,7 +418,12 @@ def oracle_algorithm(
     lb_norm = -np.ones(len(lb))
     ub_norm = np.ones(len(lb))
     A, b = initialise_outer_approximation(lb_norm, ub_norm)
-    outer = OuterApproximation(A=A, b=b, lb_physical=lb, ub_physical=ub,)
+    outer = OuterApproximation(
+        A=A,
+        b=b,
+        lb_physical=lb,
+        ub_physical=ub,
+    )
 
     delta = delta_convergence
     best_distance = np.inf
@@ -429,16 +439,14 @@ def oracle_algorithm(
 
         best_distance = -np.inf
         best_vertex = None
-        
+
         for vertex in vertices:
-        
-            distance, projection, lambdas = (
-                distance_to_inner_hull_linf(
-                    vertex,
-                    inner_points_norm,
-                )
+
+            distance, projection, lambdas = distance_to_inner_hull_linf(
+                vertex,
+                inner_points_norm,
             )
-        
+
             if distance > best_distance:
                 best_distance = distance
                 best_vertex = vertex
@@ -454,23 +462,20 @@ def oracle_algorithm(
             index=points.index,
         )
 
-    ## STEP 3. Find nearest feasible/near-optimal point
+        ## STEP 3. Find nearest feasible/near-optimal point
 
         mga_weights_neutral = mga_weights[
-            (x for x in mga_weights.columns if 'min' in x)
-            ]
+            (x for x in mga_weights.columns if "min" in x)
+        ]
 
-        mga_weights_neutral.columns = range(1, len(mga_weights_neutral.columns)+1)
+        mga_weights_neutral.columns = range(1, len(mga_weights_neutral.columns) + 1)
         mga_weights_neutral
 
-    # Recreate MGA model
+        # Recreate MGA model
         network_mga, model_mga = setup_mga_model(config, network_costopt)
 
         poi_expressions = extract_poi_expressions(
-            network_mga,
-            model_mga,
-            mga_weights_neutral,
-            target_techs
+            network_mga, model_mga, mga_weights_neutral, target_techs
         )
 
         # scalar infinity-norm variable
@@ -478,23 +483,23 @@ def oracle_algorithm(
             lower=0,
             name="oracle_projection_distance",
         )
-        
+
         for poi, expr in poi_expressions.items():
-        
+
             target = zO[poi]
-        
+
             # expr - target <= t
             model_mga.add_constraints(
                 expr - target <= t,
                 name=f"oracle_upper_{poi}",
             )
-        
+
             # -(expr - target) <= t
             model_mga.add_constraints(
                 target - expr <= t,
                 name=f"oracle_lower_{poi}",
             )
-        
+
         # objective: minimise distance to trial point
         model_mga.add_objective(
             t,
@@ -513,18 +518,16 @@ def oracle_algorithm(
             lb.values,
             ub.values,
         )
-        
-        t_value = float(
-            model_mga.variables["oracle_projection_distance"].solution
-        )
 
-    ## STEP 4. Update (i.e., cut) the projection
+        t_value = float(model_mga.variables["oracle_projection_distance"].solution)
+
+        ## STEP 4. Update (i.e., cut) the projection
 
         sigma = extract_projection_cut_normal(
             model_mga,
             pois=mga_weights_neutral.index,
         )
-        
+
         rhs = sigma @ zI
 
         sigma_norm, rhs_norm = normalise_cut(
@@ -533,26 +536,29 @@ def oracle_algorithm(
             lb.values,
             ub.values,
         )
-        
-    # Add the found point to the (normalised) inner points
-        inner_points_norm = np.vstack([
-            inner_points_norm,
-            zI_norm,
-        ])
 
-    # If this assertion ever fails, something broke in the projection-cut reconstruction.
+        # Add the found point to the (normalised) inner points
+        inner_points_norm = np.vstack(
+            [
+                inner_points_norm,
+                zI_norm,
+            ]
+        )
+
+        # If this assertion ever fails, something broke in the projection-cut reconstruction.
         assert sigma @ zO > sigma @ zI
 
-        outer.A = np.vstack([
-            outer.A,
-            sigma_norm,
-        ])
-        
+        outer.A = np.vstack(
+            [
+                outer.A,
+                sigma_norm,
+            ]
+        )
+
         outer.b = np.append(
             outer.b,
             rhs_norm,
         )
-
 
         mga_spatial_alternatives[iteration], mga_alternatives[iteration] = (
             extract_diversified_capacity(target_techs, network_mga)
@@ -564,4 +570,4 @@ def oracle_algorithm(
     mga_spatial_alternatives = alternatives_dict_to_frame(mga_spatial_alternatives)
     mga_alternatives = alternatives_dict_to_frame(mga_alternatives)
 
-    return mga_spatial_alternatives, mga_alternatives #, mga_weights
+    return mga_spatial_alternatives, mga_alternatives  # , mga_weights

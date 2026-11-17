@@ -131,6 +131,7 @@ class SPORESConfig(SimpleMGAConfig):
 
         return self  # no duplicates found
 
+
 class ORACLEConfig(BaseModel):
     config_name: Annotated[str, StringConstraints(min_length=1)]
     """Descriptive name of this configuration, used in the output folder name to save results."""

@@ -45,7 +45,7 @@ def match_config_techs_to_model_techs(config, network):
             continue
 
         carriers_present = set(df["carrier"].dropna().astype(str))
-        if diversified_techs is not None:        
+        if diversified_techs is not None:
             matched_diversified = sorted(
                 t for t in diversified_techs if t in carriers_present
             )
