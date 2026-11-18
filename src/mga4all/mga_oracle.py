@@ -1,4 +1,3 @@
-
 from dataclasses import dataclass
 from fractions import Fraction
 
@@ -592,7 +591,6 @@ def oracle_algorithm(
                 best_distance = distance
                 best_vertex = vertex.copy()
 
-
         # --------------------------------------------------------
         # DIAGNOSTIC: Validate randomly selected cached distances
         # --------------------------------------------------------
@@ -602,9 +600,7 @@ def oracle_algorithm(
         if n_validate > 0:
 
             cached_indices = [
-                i
-                for i, entry in enumerate(current_vertex_cache)
-                if entry["reused"]
+                i for i, entry in enumerate(current_vertex_cache) if entry["reused"]
             ]
 
             rng = np.random.default_rng(iteration)
@@ -626,9 +622,7 @@ def oracle_algorithm(
                     inner_points_norm,
                 )
 
-                errors.append(
-                    abs(fresh_distance - entry["distance"])
-                )
+                errors.append(abs(fresh_distance - entry["distance"]))
 
             print(
                 "Maximum cached-distance validation error:",
