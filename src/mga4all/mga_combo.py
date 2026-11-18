@@ -11,7 +11,7 @@ from .model_interface_pypsa import (
     extract_diversified_capacity,
     extract_minimum_feasible_cost,
     match_config_techs_to_model_techs,
-    solve_network
+    solve_network,
 )
 from .utils import alternatives_dict_to_frame, save_network
 from .validate import ComboConfig

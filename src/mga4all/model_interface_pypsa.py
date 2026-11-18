@@ -411,11 +411,13 @@ def assign_mga_objective(
 
     model_mga.add_objective(mga_obj, overwrite=True)
 
+
 def solve_network(network_mga):
 
     status = network_mga.optimize.solve_model()
 
     return status
+
 
 def extract_oracle_poi_expressions(
     network_mga,
@@ -438,7 +440,9 @@ def extract_oracle_poi_expressions(
             }
     """
 
-    pois = mga_weights.index #sorted({tech for carriers in target_techs.values() for tech in carriers})
+    pois = (
+        mga_weights.index
+    )  # sorted({tech for carriers in target_techs.values() for tech in carriers})
 
     poi_expressions = {}
 
@@ -462,6 +466,7 @@ def extract_oracle_poi_expressions(
         poi_expressions[poi] = expr.sum()
 
     return poi_expressions
+
 
 def build_oracle_projection_problem(
     model_mga,
@@ -505,19 +510,16 @@ def build_oracle_projection_problem(
 
     return t
 
+
 def extract_oracle_projection_cut_normal(
     model_mga,
-    pois, # Properties of interest
+    pois,  # Properties of interest
 ):
     sigma = {}
 
     for poi in pois:
 
-        sigma[poi] = (
-            model_mga.constraints[
-                f"oracle_residual_{poi}"
-            ].dual.item()
-        )
+        sigma[poi] = model_mga.constraints[f"oracle_residual_{poi}"].dual.item()
 
     return pd.Series(
         sigma,

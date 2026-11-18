@@ -1,34 +1,32 @@
-from math import comb
 
+from dataclasses import dataclass
+from fractions import Fraction
+
+import cdd
+import cdd.gmp as cdd_gmp
 import numpy as np
 import pandas as pd
 import pypsa
-import cdd
-import cdd.gmp as cdd_gmp
-
-from dataclasses import dataclass
 from scipy.optimize import linprog
 from scipy.spatial import cKDTree
-from fractions import Fraction
 
 from .model_interface_pypsa import (
     add_slack_constraint,
     assign_mga_objective,
+    build_oracle_projection_problem,
     create_mga_model,
     extract_diversified_capacity,
     extract_minimum_feasible_cost,
-    match_config_techs_to_model_techs,
-    convert_linear_weights_into_pypsa,
-    solve_network,
     extract_oracle_poi_expressions,
-    build_oracle_projection_problem,
     extract_oracle_projection_cut_normal,
+    match_config_techs_to_model_techs,
+    solve_network,
 )
 from .utils import (
     alternatives_dict_to_frame,
-    save_network,
-    normalise_point,
     denormalise_point,
+    normalise_point,
+    save_network,
 )
 from .validate import ORACLEConfig
 
@@ -72,7 +70,12 @@ def create_target_variables(config: ORACLEConfig, network_mga):
     else:
         deployed_capacity_series = deployed_capacity_series_aggregate
 
-    return target_techs, deployed_capacity_series, deployed_capacity_series_aggregate, spatial
+    return (
+        target_techs,
+        deployed_capacity_series,
+        deployed_capacity_series_aggregate,
+        spatial,
+    )
 
 
 def generate_integer_weights(
@@ -211,20 +214,17 @@ def distance_to_inner_hull_linf(vertex, inner_points):
     # SciPy returns their dual marginals in the same order.
     marginals = result.ineqlin.marginals
 
-    pi = (
-        -marginals[0::2]
-        + marginals[1::2]
-    )
+    pi = -marginals[0::2] + marginals[1::2]
 
     return distance, projection, lambdas, pi
 
 
 # Initialise once, at module level
-#enumerate_vertices_gmp_fallback_count = 0
+# enumerate_vertices_gmp_fallback_count = 0
 
 
 def enumerate_vertices(A, b):
-#    global enumerate_vertices_gmp_fallback_count
+    #    global enumerate_vertices_gmp_fallback_count
 
     A = np.asarray(A, dtype=float)
     b = np.asarray(b, dtype=float)
@@ -243,11 +243,7 @@ def enumerate_vertices(A, b):
         generators = cdd.copy_generators(poly)
 
         vertices = np.array(
-            [
-                row[1:]
-                for row in generators.array
-                if row[0] == 1
-            ],
+            [row[1:] for row in generators.array if row[0] == 1],
             dtype=float,
         ).reshape(-1, A.shape[1])
 
@@ -255,7 +251,6 @@ def enumerate_vertices(A, b):
             raise RuntimeError("Vertex enumeration returned no vertices.")
         if len(vertices) and np.any(A @ vertices.T > b[:, None] + 1e-7):
             raise RuntimeError("Floating-point vertex validation failed.")
-
 
         return vertices
 
@@ -269,13 +264,10 @@ def enumerate_vertices(A, b):
         ):
             raise
 
-#        enumerate_vertices_gmp_fallback_count += 1
+    #        enumerate_vertices_gmp_fallback_count += 1
 
     # GMP fallback
-    H_fraction = [
-        [Fraction(str(value)) for value in row]
-        for row in H
-    ]
+    H_fraction = [[Fraction(str(value)) for value in row] for row in H]
 
     mat = cdd_gmp.matrix_from_array(
         H_fraction,
@@ -295,10 +287,9 @@ def enumerate_vertices(A, b):
     ).reshape(-1, A.shape[1])
 
     if len(vertices) == 0:
-        raise RuntimeError(
-            "GMP vertex enumeration also returned no vertices."
-        )
+        raise RuntimeError("GMP vertex enumeration also returned no vertices.")
     return vertices
+
 
 def normalise_cut(
     sigma,
@@ -350,15 +341,18 @@ def oracle_algorithm(
     delta_convergence: float = 0.08,
     export_nc: str | bool = False,
 ):
-    
+
     spatial = config.spatially_explicit
     mga_alternatives = {}
     mga_spatial_alternatives = {}
 
     network_mga, model_mga = setup_mga_model(config, network_costopt)
-    target_techs, deployed_capacity_series, deployed_capacity_series_aggregate, spatially_explicit = (
-        create_target_variables(config, network_mga)
-    )
+    (
+        target_techs,
+        deployed_capacity_series,
+        deployed_capacity_series_aggregate,
+        spatially_explicit,
+    ) = create_target_variables(config, network_mga)
 
     mga_spatial_alternatives[0], mga_alternatives[0] = extract_diversified_capacity(
         target_techs, network_costopt
@@ -371,7 +365,9 @@ def oracle_algorithm(
     if spatial:
         mga_weights = generate_integer_weights(deployed_capacity_series, config)
     else:
-        mga_weights = generate_integer_weights(deployed_capacity_series_aggregate, config)
+        mga_weights = generate_integer_weights(
+            deployed_capacity_series_aggregate, config
+        )
 
     mga_weights_agnostic = mga_weights.copy()
     mga_weights_agnostic.columns = range(1, len(mga_weights_agnostic.columns) + 1)
@@ -389,7 +385,6 @@ def oracle_algorithm(
         )
 
         save_network(export_nc, iteration, network_mga)
-
 
     # ------------------------------------------------------------
     # STEP 1. Initialise inner and outer approximations
@@ -426,10 +421,9 @@ def oracle_algorithm(
     # Rows = points, columns = variables
     inner_points = points.T.to_numpy()
 
-    inner_points_norm = np.array([
-        normalise_point(p, lb.values, ub.values)
-        for p in inner_points
-    ])
+    inner_points_norm = np.array(
+        [normalise_point(p, lb.values, ub.values) for p in inner_points]
+    )
 
     if not np.isfinite(inner_points_norm).all():
         raise ValueError("Non-finite values in normalised initial alternatives.")
@@ -448,7 +442,6 @@ def oracle_algorithm(
     )
 
     best_distance = np.inf
-
 
     # ------------------------------------------------------------
     # STEP 2. Find trial point in outer approximation
@@ -490,100 +483,98 @@ def oracle_algorithm(
         # --------------------------------------------------------
         # Distance calculations with supporting-hyperplane reuse
         # --------------------------------------------------------
-        
+
         best_distance = -np.inf
         best_vertex = None
-        
+
         current_vertex_cache = []
-        
+
         n_cached_distances = 0
         n_distance_lp_solves = 0
-        
+
         # Build a spatial index of the vertices from the previous iteration.
         if previous_vertex_cache:
-        
-            old_vertices = np.array([
-                entry["vertex"]
-                for entry in previous_vertex_cache
-            ])
-        
+
+            old_vertices = np.array(
+                [entry["vertex"] for entry in previous_vertex_cache]
+            )
+
             old_vertex_tree = cKDTree(old_vertices)
-        
+
         else:
             old_vertex_tree = None
-        
-        
+
         for vertex in vertices:
-        
+
             cached_entry = None
-        
+
             # ----------------------------------------------------
             # 1. Find whether this vertex existed previously
             # ----------------------------------------------------
-        
+
             if old_vertex_tree is not None:
-        
+
                 match_distance, match_idx = old_vertex_tree.query(vertex)
-        
+
                 if match_distance <= vertex_match_tol:
-        
+
                     old_entry = previous_vertex_cache[match_idx]
-        
+
                     # ------------------------------------------------
                     # 2. Check whether the newly added inner point
                     #    invalidates the previous projection
                     # ------------------------------------------------
-        
+
                     if pending_inner_point is not None:
-        
+
                         lhs = old_entry["pi"] @ pending_inner_point
                         rhs = old_entry["pi"] @ old_entry["projection"]
-        
+
                         # Use a conservative test: if the condition is
                         # close to equality, solve the LP again.
                         if lhs <= rhs - support_tol:
                             cached_entry = old_entry
-        
+
             # ----------------------------------------------------
             # 3. Reuse the old result or solve the distance LP
             # ----------------------------------------------------
-        
+
             if cached_entry is not None:
-        
+
                 distance = cached_entry["distance"]
                 projection = cached_entry["projection"]
                 pi = cached_entry["pi"]
-        
+
                 n_cached_distances += 1
-        
+
             else:
-        
-                distance, projection, lambdas, pi = (
-                    distance_to_inner_hull_linf(
-                        vertex,
-                        inner_points_norm,
-                    )
+
+                distance, projection, lambdas, pi = distance_to_inner_hull_linf(
+                    vertex,
+                    inner_points_norm,
                 )
-                
+
                 if np.linalg.norm(pi, ord=1) > 1 + 1e-6:
                     raise RuntimeError("Unexpected distance LP dual vector.")
-                
+
                 n_distance_lp_solves += 1
-        
+
             # Store the result for the next iteration.
-            current_vertex_cache.append({
-                "vertex": vertex.copy(),
-                "distance": distance,
-                "projection": projection.copy(),
-                "pi": pi.copy(),
-            })
-        
+            current_vertex_cache.append(
+                {
+                    "vertex": vertex.copy(),
+                    "distance": distance,
+                    "projection": projection.copy(),
+                    "pi": pi.copy(),
+                }
+            )
+
             # Update the farthest vertex.
             if distance > best_distance:
-        
+
                 best_distance = distance
                 best_vertex = vertex.copy()
-        
+
         print("Best distance:", best_distance)
 
         zO = denormalise_point(
@@ -593,7 +584,6 @@ def oracle_algorithm(
         )
 
         zO = pd.Series(zO, index=points.index)
-
 
         # --------------------------------------------------------
         # STEP 3. Find nearest feasible / near-optimal point
@@ -605,9 +595,7 @@ def oracle_algorithm(
                 [x for x in mga_weights.columns if "min" in x]
             ].copy()
 
-            mga_weights_neutral.columns = range(
-                1, len(mga_weights_neutral.columns) + 1
-            )
+            mga_weights_neutral.columns = range(1, len(mga_weights_neutral.columns) + 1)
 
         else:
 
@@ -630,8 +618,8 @@ def oracle_algorithm(
             target_techs,
             spatial,
         )
-        
-        #FIXME: Operations on the model should be part of the model 
+
+        # FIXME: Operations on the model should be part of the model
         # interface and thus model agnostics. Move 'add_variables' and
         # add_constraints to the model interface.
 
@@ -645,13 +633,9 @@ def oracle_algorithm(
         status = solve_network(network_mga)
 
         if spatial:
-            zI = extract_diversified_capacity(
-                target_techs, network_mga
-            )[0]
+            zI = extract_diversified_capacity(target_techs, network_mga)[0]
         else:
-            zI = extract_diversified_capacity(
-                target_techs, network_mga
-            )[1]
+            zI = extract_diversified_capacity(target_techs, network_mga)[1]
 
         # --------------------------------------------------------
         # STEP 4. Construct projection cut
@@ -696,26 +680,29 @@ def oracle_algorithm(
             ub.values,
         )
 
-
         # --------------------------------------------------------
         # STEP 5. Update inner and outer approximations
         # --------------------------------------------------------
 
         # Add the new projected point to the inner approximation.
-        inner_points_norm = np.vstack([
-            inner_points_norm,
-            zI_norm,
-        ])
+        inner_points_norm = np.vstack(
+            [
+                inner_points_norm,
+                zI_norm,
+            ]
+        )
 
         # Additional geometric consistency check.
         assert sigma @ zO > sigma @ zI
 
         cut_tolerance = 1e-2
 
-        outer.A = np.vstack([
-            outer.A,
-            sigma_norm,
-        ])
+        outer.A = np.vstack(
+            [
+                outer.A,
+                sigma_norm,
+            ]
+        )
 
         outer.b = np.append(
             outer.b,
@@ -736,7 +723,7 @@ def oracle_algorithm(
         # latest cut and the inner approximation before the latest point.
         # It will be checked against this new point next iteration.
         previous_vertex_cache = current_vertex_cache
-        
+
         pending_inner_point = zI_norm.copy()
 
         mga_spatial_alternatives[iteration], mga_alternatives[iteration] = (
@@ -747,17 +734,12 @@ def oracle_algorithm(
 
         iteration += 1
 
-
     # ------------------------------------------------------------
     # Convert results to DataFrames
     # ------------------------------------------------------------
 
-    mga_spatial_alternatives = alternatives_dict_to_frame(
-        mga_spatial_alternatives
-    )
+    mga_spatial_alternatives = alternatives_dict_to_frame(mga_spatial_alternatives)
 
-    mga_alternatives = alternatives_dict_to_frame(
-        mga_alternatives
-    )
+    mga_alternatives = alternatives_dict_to_frame(mga_alternatives)
 
     return mga_spatial_alternatives, mga_alternatives  # , mga_weights
