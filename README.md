@@ -17,6 +17,7 @@ Various Modelling to Generate Alternative (MGA) algorithms for different energy 
 | [Random Directions](https://doi.org/10.1016/j.energy.2017.03.043)             | ✅             |
 | [Min-Max](https://doi.org/10.1021/es301249p) (acessible within Combo)         | ✅             |
 | [Hop-Skip-JUmp](https://doi.org/10.1016/j.eneco.2010.05.002)                  | ✅             |
+| [G-ORACLE](https://doi.org/10.48550/arXiv.2610.32759)                         | ✅             |
 
 ## Running MGA4all
 
