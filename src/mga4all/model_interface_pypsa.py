@@ -410,3 +410,116 @@ def assign_mga_objective(
     )
 
     model_mga.add_objective(mga_obj, overwrite=True)
+
+def solve_network(network_mga):
+
+    status = network_mga.optimize.solve_model()
+
+    return status
+
+def extract_oracle_poi_expressions(
+    network_mga,
+    model_mga,
+    mga_weights,
+    target_techs,
+    spatial,
+):
+    """
+    Build one Linopy expression per PoI.
+
+    Returns
+    -------
+    dict[str, linopy.LinearExpression]
+        Mapping:
+            {
+                "gas": expression,
+                "solar": expression,
+                ...
+            }
+    """
+
+    pois = mga_weights.index #sorted({tech for carriers in target_techs.values() for tech in carriers})
+
+    poi_expressions = {}
+
+    for poi in pois:
+
+        column = mga_weights.loc[poi].ne(0).idxmax()
+        weights = mga_weights[column]
+
+        weight_dict = convert_linear_weights_into_pypsa(
+            network=network_mga,
+            mga_weights_series=weights,
+            target_techs=target_techs,
+            spatial=spatial,
+        )
+
+        expr = network_mga.optimize.build_linexpr_from_weights(
+            weight_dict,
+            model=model_mga,
+        )
+
+        poi_expressions[poi] = expr.sum()
+
+    return poi_expressions
+
+def build_oracle_projection_problem(
+    model_mga,
+    poi_expressions,
+    zO,
+):
+
+    t = model_mga.add_variables(
+        lower=0,
+        name="oracle_projection_distance",
+    )
+
+    r = model_mga.add_variables(
+        coords={"point": zO.index},
+        name="oracle_residual",
+    )
+
+    for poi, expr in poi_expressions.items():
+
+        model_mga.add_constraints(
+            zO[poi] - expr == r.loc[poi],
+            name=f"oracle_residual_{poi}",
+        )
+
+    for poi in zO.index:
+
+        model_mga.add_constraints(
+            r.loc[poi] <= t,
+            name=f"oracle_residual_upper_{poi}",
+        )
+
+        model_mga.add_constraints(
+            -r.loc[poi] <= t,
+            name=f"oracle_residual_lower_{poi}",
+        )
+
+    model_mga.add_objective(
+        t,
+        overwrite=True,
+    )
+
+    return t
+
+def extract_oracle_projection_cut_normal(
+    model_mga,
+    pois, # Properties of interest
+):
+    sigma = {}
+
+    for poi in pois:
+
+        sigma[poi] = (
+            model_mga.constraints[
+                f"oracle_residual_{poi}"
+            ].dual.item()
+        )
+
+    return pd.Series(
+        sigma,
+        dtype=float,
+    )

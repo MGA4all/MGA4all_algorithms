@@ -140,7 +140,8 @@ class ORACLEConfig(BaseModel):
 
     cost_slack: Annotated[float, Field(gt=0, lt=1)]
     """Percentage relaxation of the optimal cost expressed as a fraction (e.g., 10% is 0.1)"""
-
+    spatially_explicit: bool
+    """Whether to target MGA variables per node or at the system level only."""
     intensified_technologies: list[str] = Field(min_length=0)
     """Which technologies to intensify (max/min) to initialise the algorithm."""
 
