@@ -16,6 +16,7 @@ from .model_interface_pypsa import (
     extract_intensified_capacity,
     extract_minimum_feasible_cost,
     match_config_techs_to_model_techs,
+    solve_network,
 )
 from .utils import alternatives_dict_to_frame, save_network
 from .validate import SPORESConfig
@@ -253,7 +254,7 @@ def spores_algorithm(
         network_mga, model_mga = update_mga_objective(
             network_mga, model_mga, mga_weights_series, target_techs, spatially_explicit
         )
-        network_mga.optimize.solve_model(log_to_console=False)
+        solve_network(network_mga)
 
         mga_spatial_alternatives[iteration], mga_alternatives[iteration] = (
             extract_diversified_capacity(target_techs, network_mga)

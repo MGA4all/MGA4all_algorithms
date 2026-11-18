@@ -1,0 +1,7 @@
+# yaml configuration file for running the combo algorithm
+
+config_name: "oracle"
+model_interface: pypsa
+cost_slack: 0.1
+spatially_explicit: True
+intensified_technologies: ["wind", "solar", "gas", "battery"]

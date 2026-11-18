@@ -130,3 +130,36 @@ class SPORESConfig(SimpleMGAConfig):
             )
 
         return self  # no duplicates found
+
+
+class ORACLEConfig(BaseModel):
+    config_name: Annotated[str, StringConstraints(min_length=1)]
+    """Descriptive name of this configuration, used in the output folder name to save results."""
+    model_interface: Literal["pypsa"]
+    """Which model interface to use (e.g., PyPSA's)."""
+
+    cost_slack: Annotated[float, Field(gt=0, lt=1)]
+    """Percentage relaxation of the optimal cost expressed as a fraction (e.g., 10% is 0.1)"""
+    spatially_explicit: bool
+    """Whether to target MGA variables per node or at the system level only."""
+    intensified_technologies: list[str] = Field(min_length=0)
+    """Which technologies to intensify (max/min) to initialise the algorithm."""
+
+    @staticmethod
+    def find_duplicates(items: list) -> list:
+        """Return the duplicates from the given list of items."""
+        duplicates = copy(items)
+        for item in set(items):
+            duplicates.remove(item)
+        return duplicates
+
+    @model_validator(mode="after")
+    def ensure_unique_intensified_technologies(self) -> Self:
+        """Ensure there are no duplicates in diversified_technologies."""
+        if len(set(self.intensified_technologies)) < len(self.intensified_technologies):
+            duplicates = self.find_duplicates(self.intensified_technologies)
+            raise ValueError(
+                f"Duplicate `intensified_technologies` entries found: {duplicates}"
+            )
+
+        return self  # no duplicates found
