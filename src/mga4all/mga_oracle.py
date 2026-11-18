@@ -249,8 +249,15 @@ def enumerate_vertices(A, b):
 
         if len(vertices) == 0:
             raise RuntimeError("Vertex enumeration returned no vertices.")
-        if len(vertices) and np.any(A @ vertices.T > b[:, None] + 1e-7):
-            raise RuntimeError("Floating-point vertex validation failed.")
+        if len(vertices):
+            violations = A @ vertices.T - b[:, None]
+            max_violation = np.max(violations)
+
+            if max_violation > 1e-7:
+                raise RuntimeError(
+                    "Floating-point vertex validation failed. "
+                    f"Maximum violation: {max_violation:.3e}"
+                )
 
         return vertices
 
@@ -260,6 +267,7 @@ def enumerate_vertices(A, b):
             for message in [
                 "Numerical inconsistency",
                 "returned no vertices",
+                "Floating-point vertex validation failed",
             ]
         ):
             raise
@@ -286,8 +294,15 @@ def enumerate_vertices(A, b):
         dtype=float,
     ).reshape(-1, A.shape[1])
 
-    if len(vertices) == 0:
-        raise RuntimeError("GMP vertex enumeration also returned no vertices.")
+    if len(vertices):
+        violations = A @ vertices.T - b[:, None]
+        max_violation = np.max(violations)
+
+        if max_violation > 1e-7:
+            raise RuntimeError(
+                "GMP vertex validation failed. "
+                f"Maximum violation: {max_violation:.3e}"
+            )
     return vertices
 
 
@@ -339,6 +354,7 @@ def oracle_algorithm(
     config: ORACLEConfig,
     network_costopt: pypsa.Network,
     delta_convergence: float = 0.08,
+    max_iterations: int = 200,
     export_nc: str | bool = False,
 ):
 
@@ -462,7 +478,7 @@ def oracle_algorithm(
     # Numerical tolerance for the supporting-hyperplane test.
     support_tol = 1e-10
 
-    while best_distance > delta_convergence:
+    while best_distance > delta_convergence and iteration <= max_iterations:
 
         print(f"\nIteration {iteration}")
 
@@ -566,6 +582,7 @@ def oracle_algorithm(
                     "distance": distance,
                     "projection": projection.copy(),
                     "pi": pi.copy(),
+                    "reused": cached_entry is not None,
                 }
             )
 
@@ -575,6 +592,50 @@ def oracle_algorithm(
                 best_distance = distance
                 best_vertex = vertex.copy()
 
+
+        # --------------------------------------------------------
+        # DIAGNOSTIC: Validate randomly selected cached distances
+        # --------------------------------------------------------
+
+        n_validate = min(20, n_cached_distances)
+
+        if n_validate > 0:
+
+            cached_indices = [
+                i
+                for i, entry in enumerate(current_vertex_cache)
+                if entry["reused"]
+            ]
+
+            rng = np.random.default_rng(iteration)
+
+            selected = rng.choice(
+                cached_indices,
+                size=n_validate,
+                replace=False,
+            )
+
+            errors = []
+
+            for idx in selected:
+
+                entry = current_vertex_cache[idx]
+
+                fresh_distance, _, _, _ = distance_to_inner_hull_linf(
+                    entry["vertex"],
+                    inner_points_norm,
+                )
+
+                errors.append(
+                    abs(fresh_distance - entry["distance"])
+                )
+
+            print(
+                "Maximum cached-distance validation error:",
+                max(errors),
+            )
+
+        assert best_vertex is not None
         print("Best distance:", best_distance)
 
         zO = denormalise_point(
@@ -695,7 +756,7 @@ def oracle_algorithm(
         # Additional geometric consistency check.
         assert sigma @ zO > sigma @ zI
 
-        cut_tolerance = 1e-2
+        cut_tolerance = 1e-4
 
         outer.A = np.vstack(
             [
