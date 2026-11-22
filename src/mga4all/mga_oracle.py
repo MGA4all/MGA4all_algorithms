@@ -236,7 +236,10 @@ def enumerate_vertices(A, b):
         mat = cdd.matrix_from_array(H)
         mat.rep_type = cdd.RepType.INEQUALITY
 
-        cdd.matrix_canonicalize(mat)
+#        try:
+#            cdd.matrix_canonicalize(mat)
+#        except RuntimeError:
+#            pass
 
         poly = cdd.polyhedron_from_matrix(mat)
         generators = cdd.copy_generators(poly)
@@ -267,6 +270,8 @@ def enumerate_vertices(A, b):
                 "Numerical inconsistency",
                 "returned no vertices",
                 "Floating-point vertex validation failed",
+                "LP cycling",
+                "Criss-Cross",
             ]
         ):
             raise
