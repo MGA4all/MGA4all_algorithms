@@ -14,11 +14,6 @@ highspy = "*"
 # ORACLE backend
 cddlib = "*"
 
-# core python stack
-numpy = "*"
-pandas = "*"
-pydantic = "*"
-
 [pypi-dependencies]
 mga4all = { path = ".", editable = true }
 pycddlib = "*"

@@ -37,18 +37,10 @@ Clone the repository and install the environment: `git clone https://github.com/
 Then, within the directory of the cloned repository, run: `pixi install`.
 You can then activate the environment by simply running: `pixi shell`, and run any script that uses MGA4all normally.
 
-### Development setup
-The repository provides additional environments for development, documentation, linting, and type checking.
-Examples:
-```
-pixi run --environment dev pytest
-pixi run --environment lint ruff check src tests
-pixi run --environment typing mypy src tests
-pixi run --environment docs sphinx-build -b html docs docs/_build
-```
-### Alternative installation
-Advanced users may create their own Python environment and install MGA4all manually: `pip install -e .`.
-However, this installation path does not automatically provide external dependencies such as Gurobi, HiGHS, or cddlib. For a fully supported setup, we recommend using Pixi.
+### Existing environment installation
+
+Advanced users may install MGA4all into an existing environment (for example a PyPSA-Eur environment). This can be done via: `pip install mga4all`.
+In this case, external solver and system dependencies such as: Gurobi, HiGHS, cddlib / pycddlib must be installed separately by the user.
 
 ## Runninga MGA4all
 
