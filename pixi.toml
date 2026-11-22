@@ -1,10 +1,11 @@
 [workspace]
 name = "mga4all-algos"
 channels = ["conda-forge", "gurobi"]
-platforms = ["linux-64", "osx-64", "win-64"]
+platforms = ["linux-64"] #, "osx-64", "win-64"]
 
 [dependencies]
 python = ">=3.11,<3.14"
+pip = "*"
 jupyterlab = "*"
 
 # optimisation stack
@@ -14,9 +15,6 @@ highspy = "*"
 # ORACLE backend
 cddlib = "*"
 
-[pypi-dependencies]
-mga4all = { path = ".", editable = true }
-pycddlib = "*"
-
 [tasks]
 test = "pytest"
+bootstrap = "pip install -e . && pip install pycddlib"
