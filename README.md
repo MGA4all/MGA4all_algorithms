@@ -34,7 +34,7 @@ If you don't have Pixi on your system, follow the official Pixi [installation in
 
 ### Install MGA4all
 Clone the repository and install the environment: `git clone https://github.com/MGA4all/MGA4all.git`.
-Then, within the directory of the cloned repository, run: 
+Then, within the directory of the cloned repository, run:
 ```
 pixi install
 pixi run bootstrap

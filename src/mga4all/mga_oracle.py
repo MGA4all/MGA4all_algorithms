@@ -236,10 +236,10 @@ def enumerate_vertices(A, b):
         mat = cdd.matrix_from_array(H)
         mat.rep_type = cdd.RepType.INEQUALITY
 
-#        try:
-#            cdd.matrix_canonicalize(mat)
-#        except RuntimeError:
-#            pass
+        #        try:
+        #            cdd.matrix_canonicalize(mat)
+        #        except RuntimeError:
+        #            pass
 
         poly = cdd.polyhedron_from_matrix(mat)
         generators = cdd.copy_generators(poly)
