@@ -1,0 +1,67 @@
+[workspace]
+name = "mga4all"
+channels = ["conda-forge", "gurobi"]
+platforms = ["linux-64", "osx-64", "win-64"]
+
+[dependencies]
+python = ">=3.11,<3.14"
+
+# optimisation stack
+gurobi = "*"
+highspy = "*"
+
+# ORACLE backend
+cddlib = "*"
+pycddlib = "*"
+
+# core python stack
+numpy = "*"
+pandas = "*"
+pydantic = "*"
+
+[pypi-dependencies]
+mga4all = { path = ".", editable = true }
+
+# ---------- development ----------
+
+[feature.dev.dependencies]
+pytest = "*"
+pytest-cov = "*"
+pytest-mock = "*"
+coverage = "*"
+pre-commit = "*"
+
+# ---------- typing ----------
+
+[feature.typing.dependencies]
+mypy = ">=1.0"
+pyright = "*"
+pyrefly = "*"
+
+# ---------- docs ----------
+
+[feature.docs.dependencies]
+sphinx = "*"
+sphinx-autoapi = "*"
+numpydoc = "*"
+pydata-sphinx-theme = "*"
+
+# ---------- lint ----------
+
+[feature.lint.dependencies]
+black = "*"
+ruff = "*"
+
+[environments]
+default = {}
+dev = { features = ["dev"] }
+typing = { features = ["typing"] }
+docs = { features = ["docs"] }
+lint = { features = ["lint"] }
+
+[tasks]
+test = "pytest"
+lint = "ruff check src tests"
+format = "black src tests"
+typecheck = "mypy src tests && pyright src tests"
+docs = "sphinx-build -b html docs docs/_build"

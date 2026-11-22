@@ -19,28 +19,40 @@ Various Modelling to Generate Alternative (MGA) algorithms for different energy 
 | [Hop-Skip-JUmp](https://doi.org/10.1016/j.eneco.2010.05.002)                  | ✅             |
 | [G-ORACLE](https://doi.org/10.48550/arXiv.2610.32759)                         | ✅             |
 
-## Running MGA4all
+## Installation
+
+We recommend using Pixi to create and manage MGA4all environments. Pixi automatically installs all required Python packages, solvers, and native dependencies, including:
+
+- PyPSA
+- Linopy
+- HiGHS (highspy)
+- Gurobi (gurobi)
+- cddlib / pycddlib (required by the ORACLE implementation)
+
+### Install Pixi
+If you don't have Pixi on your system, follow the official Pixi [installation instructions](https://pixi.prefix.dev/latest/installation/).
+
+### Install MGA4all
+Clone the repository and install the environment: `git clone https://github.com/MGA4all/MGA4all.git`.
+Then, within the directory of the cloned repository, run: `pixi install`.
+You can then activate the environment by simply running: `pixi shell`, and run any script that uses MGA4all normally.
+
+### Development setup
+The repository provides additional environments for development, documentation, linting, and type checking.
+Examples:
+```
+pixi run --environment dev pytest
+pixi run --environment lint ruff check src tests
+pixi run --environment typing mypy src tests
+pixi run --environment docs sphinx-build -b html docs docs/_build
+```
+### Alternative installation
+Advanced users may create their own Python environment and install MGA4all manually: `pip install -e .`.
+However, this installation path does not automatically provide external dependencies such as Gurobi, HiGHS, or cddlib. For a fully supported setup, we recommend using Pixi.
+
+## Runninga MGA4all
 
 We separate the MGA algorithms (e.g., `random_directions`) and modelling backends (e.g. `pypsa`). You can choose the MGA algorithm that best fits your needs and, depending on the modelling framework you want to work with, choose the appropriate backend.
-
-We prefer using [`hatch`](https://hatch.pypa.io/latest/install/)
-(>=1.16) to create/manage necessary environments and run commands
-
-```
-$ hatch run <command> [options]
-```
-
-Where, `<command>` can be any script that uses `MGA4all`; by default
-the `pypsa` backend is used.
-
-If you don't want to use `hatch`, create a virtual environment as you
-would, install MGA4all in edit mode:
-
-```
-$ pip install -e .
-```
-
-and run your script as you normally would.
 
 ### Testing with included examples
 
