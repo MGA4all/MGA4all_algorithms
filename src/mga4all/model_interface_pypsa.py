@@ -380,15 +380,9 @@ def convert_linear_weights_into_pypsa(
         df = pypsa_component_tables[component]
 
         if spatial:
-            coeffs = (
-                weights
-                .reindex(df.index)
-                .fillna(0.0)
-            )
+            coeffs = weights.reindex(df.index).fillna(0.0)
 
-            coeffs.loc[
-                ~df["carrier"].isin(techs)
-            ] = 0.0
+            coeffs.loc[~df["carrier"].isin(techs)] = 0.0
 
         else:
             coeffs = {}
