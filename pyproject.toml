@@ -74,4 +74,3 @@ addopts = [
   "-ra",
   "--cov-append",
 ]
-
