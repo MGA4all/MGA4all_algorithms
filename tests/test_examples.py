@@ -2,10 +2,18 @@ import pytest
 import yaml
 
 from mga4all.examples import create_pypsa_network
+from mga4all.mga_combo import combo_algorithm
 from mga4all.mga_hop_skip_jump import hop_skip_jump_algorithm
+from mga4all.mga_oracle import oracle_algorithm
 from mga4all.mga_random_directions import random_directions_algorithm
 from mga4all.mga_spores import spores_algorithm
-from mga4all.validate import HopSkipJumpConfig, RandomDirectionsConfig, SPORESConfig
+from mga4all.validate import (
+    ComboConfig,
+    HopSkipJumpConfig,
+    ORACLEConfig,
+    RandomDirectionsConfig,
+    SPORESConfig,
+)
 
 
 @pytest.fixture(scope="module")
@@ -31,6 +39,13 @@ def random_directions_config():
 
 
 @pytest.fixture(scope="module")
+def combo_config():
+    """Fixture for basic combo configuration."""
+    with open("configs/test_config_combo.yaml") as f:
+        return ComboConfig.model_validate(yaml.safe_load(f))
+
+
+@pytest.fixture(scope="module")
 def spores_diversify_config():
     """Fixture for SPORES configuration using only diversification."""
     with open("configs/test_config_spores_diversify_only.yaml") as f:
@@ -44,6 +59,13 @@ def spores_intensify_config():
         return SPORESConfig.model_validate(yaml.safe_load(f))
 
 
+@pytest.fixture(scope="module")
+def oracle_config():
+    """Fixture for basic ORACLE configuration."""
+    with open("configs/test_config_oracle.yaml") as f:
+        return ORACLEConfig.model_validate(yaml.safe_load(f))
+
+
 @pytest.mark.parametrize(
     ["configuration", "algorithm", "adaptive"],
     [
@@ -55,6 +77,18 @@ def spores_intensify_config():
             random_directions_algorithm,
             None,
             id="random-directions",
+        ),
+        pytest.param(
+            "combo_config",
+            combo_algorithm,
+            None,
+            id="combo",
+        ),
+        pytest.param(
+            "oracle_config",
+            oracle_algorithm,
+            None,
+            id="oracle",
         ),
         pytest.param(
             "spores_diversify_config", spores_algorithm, False, id="spores-diversify"

@@ -746,7 +746,10 @@ def oracle_algorithm(
         # Additional geometric consistency check.
         assert sigma @ zO > sigma @ zI
 
-        cut_tolerance = 1e-4
+        # Can be set to >0 to deal with numerical issues. It is an
+        # implementation safeguard that mildly changes the geometry,
+        # but may be necessary in floating-point arithmetic.
+        cut_tolerance = 0  # 1e-4
 
         outer.A = np.vstack(
             [
