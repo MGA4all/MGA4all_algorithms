@@ -676,10 +676,6 @@ def oracle_algorithm(
             spatial,
         )
 
-        # FIXME: Operations on the model should be part of the model
-        # interface and thus model agnostics. Move 'add_variables' and
-        # add_constraints to the model interface.
-
         # Scalar infinity-norm variable
         build_oracle_projection_problem(
             model_mga,
@@ -694,6 +690,37 @@ def oracle_algorithm(
         else:
             zI = extract_diversified_capacity(target_techs, network_mga)[1]
 
+        # Check whether the selected outer vertex is already feasible.
+        actual_distance = float(np.max(np.abs(zO.values - zI.values)))
+
+        if actual_distance <= 1e-8:
+            print(
+                f"Iteration {iteration}: projection point is already feasible "
+                f"(distance = {actual_distance:.3e}). No cut added."
+            )
+
+            # Add the new projected point to the normalised inner approximation.
+            zI_norm = normalise_point(zI, lb, ub)
+
+            inner_points_norm = np.vstack(
+                [
+                    inner_points_norm,
+                    zI_norm,
+                ]
+            )
+
+            # Handle cache bookkeeping
+            previous_vertex_cache = current_vertex_cache
+            pending_inner_point = zI_norm.copy()
+
+            # Store the alternative
+            (
+                mga_spatial_alternatives[iteration],
+                mga_alternatives[iteration],
+            ) = extract_diversified_capacity(target_techs, network_mga)
+
+            iteration += 1
+            continue
         # --------------------------------------------------------
         # STEP 4. Construct projection cut
         # --------------------------------------------------------
