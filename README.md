@@ -17,29 +17,37 @@ Various Modelling to Generate Alternative (MGA) algorithms for different energy 
 | [Random Directions](https://doi.org/10.1016/j.energy.2017.03.043)             | ✅             |
 | [Min-Max](https://doi.org/10.1021/es301249p) (acessible within Combo)         | ✅             |
 | [Hop-Skip-JUmp](https://doi.org/10.1016/j.eneco.2010.05.002)                  | ✅             |
+| [G-ORACLE](https://doi.org/10.48550/arXiv.2610.32759)                         | ✅             |
 
-## Running MGA4all
+## Installation
+
+We recommend using Pixi to create and manage MGA4all environments. Pixi automatically installs all required Python packages, solvers, and native dependencies, including:
+
+- PyPSA
+- Linopy
+- HiGHS (highspy)
+- Gurobi (gurobi)
+- cddlib / pycddlib (required by the ORACLE implementation)
+
+### Install Pixi
+If you don't have Pixi on your system, follow the official Pixi [installation instructions](https://pixi.prefix.dev/latest/installation/).
+
+### Install MGA4all
+Clone the repository and install the environment: `git clone https://github.com/MGA4all/MGA4all.git`.
+Then, within the directory of the cloned repository, run:
+```
+pixi install
+pixi run bootstrap
+```
+
+### Existing environment installation
+
+Advanced users may install MGA4all into an existing environment (for example a PyPSA-Eur environment). This can be done via: `pip install mga4all`.
+In this case, external solver and system dependencies such as: Gurobi, HiGHS, cddlib / pycddlib must be installed separately by the user.
+
+## Runninga MGA4all
 
 We separate the MGA algorithms (e.g., `random_directions`) and modelling backends (e.g. `pypsa`). You can choose the MGA algorithm that best fits your needs and, depending on the modelling framework you want to work with, choose the appropriate backend.
-
-We prefer using [`hatch`](https://hatch.pypa.io/latest/install/)
-(>=1.16) to create/manage necessary environments and run commands
-
-```
-$ hatch run <command> [options]
-```
-
-Where, `<command>` can be any script that uses `MGA4all`; by default
-the `pypsa` backend is used.
-
-If you don't want to use `hatch`, create a virtual environment as you
-would, install MGA4all in edit mode:
-
-```
-$ pip install -e .
-```
-
-and run your script as you normally would.
 
 ### Testing with included examples
 

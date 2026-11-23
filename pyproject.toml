@@ -5,18 +5,29 @@ build-backend = "hatchling.build"
 [project]
 name = "MGA4all"
 dynamic = ["version"]
-description = 'Various Modelling to Generate Alternative schemes for different energy system optimisation models'
+description = "Various Modelling to Generate Alternative schemes for different energy system optimisation models"
 readme = "README.md"
-requires-python = ">=3.11, <3.14" # upper limit due to gurobipy
+requires-python = ">=3.11,<3.14"
+
 license = "MIT"
 license-files = ["LICENSE", "COPYRIGHT"]
-keywords = [ "energy system", "optimisation", "MGA", "PyPSA", "SPORES", "near optimal" ]
+
+keywords = [
+  "energy system",
+  "optimisation",
+  "MGA",
+  "PyPSA",
+  "SPORES",
+  "near optimal",
+]
+
 authors = [
-  { name = "Christian Doh Dinga", email = "cdoh@tudelft.nl"},
-  { name = "Francesco Lombardi", email = "F.Lombardi@tudelft.nl"},
-  { name = "Sander van Rijn", email = "s.vanrijn@esciencecenter.nl"},
+  { name = "Christian Doh Dinga", email = "cdoh@tudelft.nl" },
+  { name = "Francesco Lombardi", email = "F.Lombardi@tudelft.nl" },
+  { name = "Sander van Rijn", email = "s.vanrijn@esciencecenter.nl" },
   { name = "Suvayu Ali", email = "fatkasuvayu+linux@gmail.com" },
 ]
+
 classifiers = [
   "Development Status :: 4 - Beta",
   "Programming Language :: Python",
@@ -24,41 +35,14 @@ classifiers = [
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: Implementation :: CPython",
-  "Programming Language :: Python :: Implementation :: PyPy",
 ]
+
 dependencies = [
-  "gurobipy",
-  "highspy",
   "numpy",
   "pandas",
   "pydantic",
-  "mga4all[pypsa]",  # NOTE: included as a default backend until we have others
-]
-
-[project.optional-dependencies]
-pypsa = [
   "pypsa>=1.2.0",
   "linopy",
-]
-
-[dependency-groups]
-dev = [
-  "coverage[toml]",
-  "pre-commit",
-  "pytest",
-  "pytest-cov",
-  "pytest-mock",
-]
-docs = [
-  "numpydoc",
-  "pydata-sphinx-theme",
-  "sphinx",
-  "sphinx-autoapi",
-]
-typing = [
-  "mypy>=1.0.0",
-  "pyrefly",
-  "pyright",
 ]
 
 [project.urls]
@@ -75,89 +59,18 @@ version-file = "src/mga4all/__version__.py"
 
 [tool.hatch.build.targets.sdist]
 include = [
-    "/src/mga4all",
+  "/src/mga4all",
 ]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/mga4all"]
 
-[tool.hatch.envs.default]
-features = [
-  "pypsa",
-]
-
-[tool.hatch.envs.test]
-features = [
-  "pypsa",
-]
-dependency-groups = [
-  "dev",
-]
-
-[tool.hatch.envs.types]
-features = [
-  "pypsa",
-]
-dependency-groups = [
-  "dev",
-  "typing",
-]
-
-[tool.hatch.envs.types.scripts]
-check-mypy = "mypy --install-types --non-interactive {args:src tests}"
-check-pyre = "pyrefly check {args:src tests}"
-check-pyright = "pyright {args:src tests}"
-
-[tool.hatch.envs.lint]
-detached = true
-skip-install = true
-dependencies = [
-    "black",
-    "ruff",
-]
-
-[tool.hatch.envs.docs]
-features = [
-  "pypsa",
-]
-dependency-groups = [
-  "docs",
-]
-
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = ["--import-mode=importlib", "--cov=src", "-q", "-ra", "--cov-append"]
-
-[tool.coverage.run]
-source_pkgs = ["src"]
-branch = true
-parallel = true
-omit = [
-  "src/mga4all/__version__.py",
+addopts = [
+  "--import-mode=importlib",
+  "--cov=src",
+  "-q",
+  "-ra",
+  "--cov-append",
 ]
-
-[tool.coverage.paths]
-mga4all = ["src/"]
-tests = ["tests", "*/tests"]
-
-[tool.coverage.report]
-exclude_lines = [
-  "no cov",
-  "if __name__ == .__main__.:",
-  "if TYPE_CHECKING:",
-]
-
-[tool.pyrefly]
-project-includes = ["src"]
-ignore-missing-imports = ["*"]
-
-[tool.pyright]
-include = ["src"]
-
-[tool.black]
-include = '\.pyi?$'
-extend-exclude ='''
-(
-  ^tests/data
-)
-'''

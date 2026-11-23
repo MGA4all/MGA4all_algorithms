@@ -1,0 +1,7 @@
+# yaml configuration file for running the ORACLE algorithm
+
+config_name: "oracle"
+model_interface: pypsa
+cost_slack: 0.2
+spatially_explicit: False
+intensified_technologies: ["wind", "solar", "gas", "battery"]
