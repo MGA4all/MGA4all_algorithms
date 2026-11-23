@@ -362,7 +362,6 @@ def oracle_algorithm(
     export_nc: str | bool = False,
 ):
 
-    spatial = config.spatially_explicit
     mga_alternatives = {}
     mga_spatial_alternatives = {}
 
@@ -377,6 +376,7 @@ def oracle_algorithm(
     mga_spatial_alternatives[0], mga_alternatives[0] = extract_diversified_capacity(
         target_techs, network_costopt
     )
+    spatial = spatially_explicit
 
     # ------------------------------------------------------------
     # STEP 0. Initialise extreme points via targeted min/max
@@ -469,7 +469,6 @@ def oracle_algorithm(
 
     iteration += 1
 
-    metrics = []
     previous_vertex_cache = []
 
     # The most recently added inner point.
@@ -488,7 +487,6 @@ def oracle_algorithm(
 
         # Record the current geometry before adding another cut/point.
         n_outer_constraints = len(outer.b)
-        n_inner_points = len(inner_points_norm)
 
         # --------------------------------------------------------
         # Vertex enumeration

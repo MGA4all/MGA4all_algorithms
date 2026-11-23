@@ -6,6 +6,7 @@ platforms = ["linux-64", "osx-64", "win-64"]
 [dependencies]
 python = ">=3.11,<3.14"
 pip = "*"
+pre-commit = "*"
 
 # tests
 pytest = "*"
@@ -25,3 +26,4 @@ cddlib = "*"
 [tasks]
 bootstrap = "python -m pip install -e . && python -m pip install pycddlib"
 test = "pytest"
+lint = "pre-commit run --all-files"
