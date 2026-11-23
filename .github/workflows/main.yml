@@ -23,8 +23,8 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       # - uses: actions/setup-python@v7
-        # with:
-        #   python-version: ${{ matrix.python-version }}
+      # with:
+      #   python-version: ${{ matrix.python-version }}
       # - name: Set up pip cache
       #   if: runner.os == 'Linux'
       #   uses: actions/cache@v6
@@ -47,4 +47,4 @@ jobs:
         run: pixi run bootstrap
 
       - name: Run tests
-        run: pixi run test     
+        run: pixi run test
