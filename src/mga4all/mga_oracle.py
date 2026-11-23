@@ -149,7 +149,6 @@ def distance_to_inner_hull_linf(vertex, inner_points):
     -------
     distance : float
     projection : ndarray
-    lambdas : ndarray
     """
 
     vertex = np.asarray(vertex, dtype=float)
@@ -215,7 +214,7 @@ def distance_to_inner_hull_linf(vertex, inner_points):
 
     pi = -marginals[0::2] + marginals[1::2]
 
-    return distance, projection, lambdas, pi
+    return distance, projection, pi
 
 
 # Initialise once, at module level
@@ -567,7 +566,7 @@ def oracle_algorithm(
 
             else:
 
-                distance, projection, lambdas, pi = distance_to_inner_hull_linf(
+                distance, projection, pi = distance_to_inner_hull_linf(
                     vertex,
                     inner_points_norm,
                 )
@@ -682,13 +681,13 @@ def oracle_algorithm(
         # add_constraints to the model interface.
 
         # Scalar infinity-norm variable
-        t = build_oracle_projection_problem(
+        build_oracle_projection_problem(
             model_mga,
             poi_expressions,
             zO,
         )
 
-        status = solve_network(network_mga)
+        solve_network(network_mga)
 
         if spatial:
             zI = extract_diversified_capacity(target_techs, network_mga)[0]
@@ -728,12 +727,6 @@ def oracle_algorithm(
         # Normalise projected and trial points
         zI_norm = normalise_point(
             zI.values,
-            lb.values,
-            ub.values,
-        )
-
-        zO_norm = normalise_point(
-            zO.values,
             lb.values,
             ub.values,
         )
