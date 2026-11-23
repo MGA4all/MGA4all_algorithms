@@ -619,7 +619,7 @@ def oracle_algorithm(
 
                 entry = current_vertex_cache[idx]
 
-                fresh_distance, _, _, _ = distance_to_inner_hull_linf(
+                fresh_distance, _, _ = distance_to_inner_hull_linf(
                     entry["vertex"],
                     inner_points_norm,
                 )
