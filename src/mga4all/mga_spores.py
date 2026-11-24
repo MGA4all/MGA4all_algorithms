@@ -1,4 +1,3 @@
-import numpy as np
 import pandas as pd
 import pypsa
 from pandas.api.types import is_number
@@ -18,7 +17,7 @@ from .model_interface_pypsa import (
     match_config_techs_to_model_techs,
     solve_network,
 )
-from .utils import alternatives_dict_to_frame, save_network
+from .utils import alternatives_dict_to_frame, normalise_l2, save_network
 from .validate import SPORESConfig
 
 
@@ -64,9 +63,9 @@ def create_intensification_variables(network_mga, spatial, target_techs, config)
     return intensified_technologies_series
 
 
-def normalise_l2(weights_series):
-    weights_series = weights_series / np.sqrt((weights_series**2).sum())
-    return weights_series
+# def normalise_l2(weights_series):
+#     weights_series = weights_series / np.sqrt((weights_series**2).sum())
+#     return weights_series
 
 
 def compute_diversification_weights(

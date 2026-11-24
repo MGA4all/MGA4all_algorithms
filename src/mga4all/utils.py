@@ -1,18 +1,12 @@
 # Functions that are useful across various parts of the code
 
+import numpy as np
 import pandas as pd
 import pypsa
 
 
 def alternatives_dict_to_frame(alternatives_dict: dict):
-    df = pd.concat(
-        (
-            pd.DataFrame(alternatives_dict[x]).fillna(0).round(2).sum(axis=1)
-            for x in alternatives_dict
-        ),
-        axis=1,
-    )
-
+    df = pd.DataFrame(alternatives_dict).fillna(0).round(2)
     return df
 
 
@@ -39,3 +33,8 @@ def normalise_point(z, lb, ub):
 
 def denormalise_point(z_norm, lb, ub):
     return 0.5 * (ub - lb) * (z_norm + 1.0) + lb
+
+
+def normalise_l2(weights_series):
+    weights_series = weights_series / np.sqrt((weights_series**2).sum())
+    return weights_series

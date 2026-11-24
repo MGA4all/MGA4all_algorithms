@@ -1,6 +1,11 @@
 import pandas as pd
 import pypsa
 
+from .direction_similarity_checks import (
+    is_different_enough,
+    perturb_noise,
+    perturb_rank_flip,
+)
 from .model_interface_pypsa import (
     add_slack_constraint,
     assign_mga_objective,
@@ -10,7 +15,7 @@ from .model_interface_pypsa import (
     match_config_techs_to_model_techs,
     solve_network,
 )
-from .utils import alternatives_dict_to_frame, save_network
+from .utils import alternatives_dict_to_frame, normalise_l2, save_network
 from .validate import HopSkipJumpConfig
 
 
@@ -57,6 +62,18 @@ def compute_hsj_weights(
     return mga_weights_series
 
 
+def compute_diversification_weights(
+    deployed_capacity_series,
+    previous_weights_series,
+):
+    new_weights_series = deployed_capacity_series
+    new_weights_series[:] = normalise_l2(deployed_capacity_series).round(2)
+    updated_weights_series = previous_weights_series + new_weights_series
+    # Perturb if all values are the same
+    diversification_weights_series = normalise_l2(updated_weights_series)
+    return diversification_weights_series
+
+
 def update_mga_objective(
     network_mga, model_mga, mga_weights_series, target_techs, spatial
 ):
@@ -69,9 +86,12 @@ def update_mga_objective(
 def hop_skip_jump_algorithm(
     config: HopSkipJumpConfig,
     network_costopt: pypsa.Network,
-    noise_threshold=0.001,
+    adaptive: bool = False,
     export_nc: str | bool = False,
 ):
+
+    MAX_NOISE_ATTEMPTS = 50
+
     mga_alternatives = {}
     mga_spatial_alternatives = {}
     mga_weights = {}
@@ -93,9 +113,34 @@ def hop_skip_jump_algorithm(
         else:
             deployed_capacity_series = mga_alternatives[iteration - 1].copy()
 
-        mga_weights_series = compute_hsj_weights(
-            deployed_capacity_series, previous_weights_series, noise_threshold
+        # mga_weights_series = compute_hsj_weights(
+        #     deployed_capacity_series, previous_weights_series, noise_threshold
+        # )
+        mga_weights_series = compute_diversification_weights(
+            deployed_capacity_series, previous_weights_series
         )
+        # ---SMART part----#
+        if adaptive:
+            # Check if different enough and perturb if not
+            if not is_different_enough(mga_weights_series, mga_weights):
+                # 1. Ranking perturbation first
+                candidate = perturb_rank_flip(mga_weights_series)
+                # 2. Noise perturbation if needed
+                attempt = 0
+                while (
+                    not is_different_enough(candidate, mga_weights)
+                    and attempt < MAX_NOISE_ATTEMPTS
+                ):
+                    candidate = perturb_noise(
+                        candidate, noise_scale=0.03 * (attempt + 1)
+                    )
+                    attempt += 1
+                # Final accepted candidate
+                mga_weights_series = candidate
+        else:
+            pass
+        # ---End of SMART part---#
+
         network_mga, model_mga = update_mga_objective(
             network_mga, model_mga, mga_weights_series, target_techs, spatially_explicit
         )
